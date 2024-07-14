@@ -29,14 +29,14 @@ data-gen-seeds = \
 download-procthor-10k:
 	@mkdir -p $(DATA_BASE_DIR)/procthor-data/
 	@$(DOCKER_PYTHON) -m taskplan.scripts.download \
-		--save_dir /data/procthor-data/
+		--save_dir /data/procthor-data
 
 # Sentesence Bert model download target
 .PHONY: download-sbert
 download-sbert:
 	@mkdir -p $(DATA_BASE_DIR)/sentence_transformers/
 	@$(DOCKER_PYTHON) -m taskplan.scripts.download \
-		--save_dir /data/sentence_transformers/
+		--save_dir /data/sentence_transformers
 
 # Combined download target
 .PHONY: download
