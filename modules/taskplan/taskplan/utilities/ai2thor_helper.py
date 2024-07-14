@@ -144,6 +144,7 @@ class ThorInterface:
         # Create dummy apartment node
         node_count = 0
         nodes = {}
+        assetId_idx_map = {}
         edges = []
         nodes[node_count] = {
             'id': 'Apartment|0',
@@ -181,6 +182,8 @@ class ThorInterface:
         for container in self.containers:
             cnt_id = get_room_id(container['id'])
             src = node_ids.index(cnt_id)
+            assetId = container['id']
+            assetId_idx_map[assetId] = node_count
             name = get_generic_name(container['id'])
             nodes[node_count] = {
                 'id': container['id'],
@@ -201,6 +204,8 @@ class ThorInterface:
             if connected_objects is not None:
                 src = node_ids.index(container['id'])
                 for object in connected_objects:
+                    assetId = object['id']
+                    assetId_idx_map[assetId] = node_count
                     name = get_generic_name(object['id'])
                     nodes[node_count] = {
                         'id': object['id'],
@@ -216,7 +221,8 @@ class ThorInterface:
             'nodes': nodes,  # dictionary {id, name, pos, type}
             'edge_index': edges,  # pairwise edge list
             'cnt_node_idx': cnt_node_idx,  # indices of contianers
-            'obj_node_idx': obj_node_idx  # indices of objects
+            'obj_node_idx': obj_node_idx,  # indices of objects
+            'idx_map': assetId_idx_map  # mapping from assedId to graph index position
         }
 
         # Add edges to get a connected graph if not already connected
