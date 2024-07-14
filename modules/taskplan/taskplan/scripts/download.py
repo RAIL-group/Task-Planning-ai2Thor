@@ -14,7 +14,7 @@ def load_procthor_data(args):
     train_data = dataset['train']
 
     # File path where you want to save the JSON Lines file
-    file_path = f'{args.save_dir}data.jsonl'
+    file_path = f'{args.save_dir}/data.jsonl'
 
     # Writing data to a JSONL file
     with open(file_path, 'w') as file:
@@ -29,8 +29,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--save_dir', type=str, required=True)
     args = parser.parse_args()
-    print(args.save_dir)
-    if args.save_dir == '/data/procthor-data/':
+
+    if args.save_dir == '/data/procthor-data':
         load_procthor_data(args)
     else:
         save_model(args)
