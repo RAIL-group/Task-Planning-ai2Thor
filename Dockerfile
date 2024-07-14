@@ -60,6 +60,8 @@ COPY modules/lsp_accel modules/lsp_accel
 RUN pip3 install modules/lsp_accel
 COPY modules/common modules/common
 RUN pip3 install modules/common
+COPY modules/learning modules/learning
+RUN pip3 install modules/learning
 
 # Set up the starting point for running the code
 COPY entrypoint.sh /entrypoint.sh
