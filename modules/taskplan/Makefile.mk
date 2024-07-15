@@ -7,9 +7,9 @@ help::
 
 # --- === Object Search and Task Planning in ProcTHOR === ---#
 BASENAME ?= taskplan
-NUM_TRAIN_SEEDS ?= 2#2000
-NUM_TEST_SEEDS ?= 0#500
-NUM_EVAL_SEEDS ?= 1#200
+NUM_TRAIN_SEEDS ?= 500
+NUM_TEST_SEEDS ?= 200
+NUM_EVAL_SEEDS ?= 100
 
 CORE_ARGS ?= --resolution 0.05
 
@@ -43,10 +43,9 @@ gen-data: $(data-gen-seeds)
 train-file = $(DATA_BASE_DIR)/$(BASENAME)/logs/$(EXPERIMENT_NAME)/gnn.pt
 $(train-file): $(data-gen-seeds)
 	@$(DOCKER_PYTHON) -m taskplan.scripts.train \
-		--num_steps 40000 \
+		--num_epochs 8 \
 		--learning_rate 1e-3 \
-		--learning_rate_decay_factor .6 \
-		--epoch_size 10000 \
+		--learning_rate_decay_factor .9 \
 		--save_dir /data/$(BASENAME)/logs/$(EXPERIMENT_NAME) \
 		--data_csv_dir /data/$(BASENAME)/
 
