@@ -15,7 +15,7 @@ import gridmap
 IGNORE_CONTAINERS = [
     'baseballbat', 'basketBall', 'boots', 'desklamp', 'painting',
     'floorlamp', 'houseplant', 'roomdecor', 'showercurtain',
-    'showerhead', 'television', 'vacuumcleaner', 'photo',
+    'showerhead', 'television', 'vacuumcleaner', 'photo', 'plunger'
 ]
 
 
@@ -109,7 +109,9 @@ class ThorInterface:
             floor = [(rp["x"], rp["z"]) for rp in room["floorPolygon"]]
             room_poly = geometry.Polygon(floor)
             point = room_poly.centroid
-            scaled_position = self.scale_to_grid(np.array([point.x, point.y]))  # noqa: E501
+            point = {'x': point.x, 'z': point.y}
+            nearest_fp = get_nearest_free_point(point, points)
+            scaled_position = self.scale_to_grid(np.array([nearest_fp[0], nearest_fp[1]]))  # noqa: E501
             room['position'] = scaled_position  # 2d only
 
         return occupancy_grid
