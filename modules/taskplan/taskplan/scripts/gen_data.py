@@ -43,8 +43,7 @@ def gen_data_main(args):
     plt.subplot(133)
     top_down_frame = thor_data.get_top_down_frame()
     plt.imshow(top_down_frame)
-    plt.savefig(f'{args.save_dir}/data_completion_logs/\
-                {args.data_file_base_name}_{args.current_seed}.png', dpi=1000)
+    plt.savefig(f'{args.save_dir}/data_completion_logs/{args.data_file_base_name}_{args.current_seed}.png', dpi=1000)
 
 
 def get_args():
