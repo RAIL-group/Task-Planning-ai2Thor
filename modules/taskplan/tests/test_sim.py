@@ -9,7 +9,7 @@ import taskplan.plotting
 def get_args():
     create_dir()
     args = lambda key: None
-    args.current_seed = 1
+    args.current_seed = 0
     args.resolution = 0.05
     return args
 
