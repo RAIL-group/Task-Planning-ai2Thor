@@ -51,6 +51,65 @@ $(train-file): $(data-gen-seeds)
 
 .PHONY: train
 train: $(train-file)
+
+## Evaluation targets ##
+# Object search: Naive target #
+eval-find-seeds-naive = \
+	$(shell for ii in $$(seq 7000 $$((7000 + $(NUM_EVAL_SEEDS) - 1))); \
+		do echo "$(DATA_BASE_DIR)/$(BASENAME)/results/$(EXPERIMENT_NAME)/naive_$${ii}.png"; done)
+$(eval-find-seeds-naive): seed = $(shell echo $@ | grep -Eo '[0-9]+' | tail -1)
+$(eval-find-seeds-naive):
+	@echo "Evaluating Data [$(BASENAME) | seed: $(seed) | Naive"]
+	@mkdir -p $(DATA_BASE_DIR)/$(BASENAME)/results/$(EXPERIMENT_NAME)
+	@$(call xhost_activate)
+	@$(DOCKER_PYTHON) -m taskplan.scripts.eval_find \
+		$(CORE_ARGS) \
+		--save_dir /data/$(BASENAME)/results/$(EXPERIMENT_NAME) \
+	 	--current_seed $(seed) \
+	 	--image_filename naive_$(seed).png \
+	 	--logfile_name naive_logfile.txt
+
+.PHONY: eval-find-naive
+eval-find-naive: $(eval-find-seeds-naive)
+
+# Object search: Known target #
+eval-find-seeds-known = \
+	$(shell for ii in $$(seq 7000 $$((7000 + $(NUM_EVAL_SEEDS) - 1))); \
+		do echo "$(DATA_BASE_DIR)/$(BASENAME)/results/$(EXPERIMENT_NAME)/known_$${ii}.png"; done)
+$(eval-find-seeds-known): seed = $(shell echo $@ | grep -Eo '[0-9]+' | tail -1)
+$(eval-find-seeds-known):
+	@echo "Evaluating Data [$(BASENAME) | seed: $(seed) | Known"]
+	@mkdir -p $(DATA_BASE_DIR)/$(BASENAME)/results/$(EXPERIMENT_NAME)
+	@$(call xhost_activate)
+	@$(DOCKER_PYTHON) -m taskplan.scripts.eval_find \
+		$(CORE_ARGS) \
+		--save_dir /data/$(BASENAME)/results/$(EXPERIMENT_NAME) \
+	 	--current_seed $(seed) \
+	 	--image_filename known_$(seed).png \
+	 	--logfile_name known_logfile.txt
+
+.PHONY: eval-find-known
+eval-find-known: $(eval-find-seeds-known)
+
+# Object search: Learned target #
+eval-find-seeds-learned = \
+	$(shell for ii in $$(seq 7000 $$((7000 + $(NUM_EVAL_SEEDS) - 1))); \
+		do echo "$(DATA_BASE_DIR)/$(BASENAME)/results/$(EXPERIMENT_NAME)/learned_$${ii}.png"; done)
+$(eval-find-seeds-learned): seed = $(shell echo $@ | grep -Eo '[0-9]+' | tail -1)
+$(eval-find-seeds-learned):
+	@echo "Evaluating Data [$(BASENAME) | seed: $(seed) | Learned"]
+	@mkdir -p $(DATA_BASE_DIR)/$(BASENAME)/results/$(EXPERIMENT_NAME)
+	@$(call xhost_activate)
+	@$(DOCKER_PYTHON) -m taskplan.scripts.eval_find \
+		$(CORE_ARGS) \
+		--save_dir /data/$(BASENAME)/results/$(EXPERIMENT_NAME) \
+	 	--current_seed $(seed) \
+	 	--image_filename learned_$(seed).png \
+	 	--logfile_name learned_logfile.txt \
+		--network_file /data/$(BASENAME)/logs/$(EXPERIMENT_NAME)/gnn.pt
+
+.PHONY: eval-find-learned
+eval-find-learned: $(eval-find-seeds-learned)
 ##############################
 
 
