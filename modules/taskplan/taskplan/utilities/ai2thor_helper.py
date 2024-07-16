@@ -67,6 +67,7 @@ class ThorInterface:
         event = self.controller.step(action="GetReachablePositions")
         reachable_positions = event.metadata["actionReturn"]
         RPs = reachable_positions
+
         xs = [rp["x"] for rp in reachable_positions]
         zs = [rp["z"] for rp in reachable_positions]
 
