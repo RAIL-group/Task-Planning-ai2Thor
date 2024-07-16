@@ -66,6 +66,7 @@ class ThorInterface:
     def get_occupancy_grid(self):
         event = self.controller.step(action="GetReachablePositions")
         reachable_positions = event.metadata["actionReturn"]
+        RPs = reachable_positions
         xs = [rp["x"] for rp in reachable_positions]
         zs = [rp["z"] for rp in reachable_positions]
 
@@ -78,7 +79,8 @@ class ThorInterface:
 
         # Create list of free points
         points = list(zip(xs, zs))
-        grid_to_points_map = {self.scale_to_grid(point): point for point in points}
+        grid_to_points_map = {self.scale_to_grid(point): RPs[idx]
+                              for idx, point in enumerate(points)}
         height, width = self.scale_to_grid([max_x, max_z])
         occupancy_grid = np.ones((height+2, width+2), dtype=int)
         free_positions = grid_to_points_map.keys()
