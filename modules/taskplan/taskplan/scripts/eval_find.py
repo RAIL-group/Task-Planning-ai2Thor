@@ -123,6 +123,13 @@ def evaluate_main(args):
     plt.xticks(fontsize=5)
     plt.yticks(fontsize=5)
 
+    if args.simulate:
+        args.cost_str = cost_str
+        taskplan.plotting.simulate_plan(
+            trajectory=trajectory,
+            thor_data=thor_data,
+            args=args
+        )
     plt.savefig(f'{args.save_dir}/{args.image_filename}', dpi=1200)
 
 
@@ -136,6 +143,7 @@ def get_args():
     parser.add_argument('--save_dir', type=str, required=True)
     parser.add_argument('--resolution', type=float, required=True)
     parser.add_argument('--network_file', type=str, required=False)
+    parser.add_argument('--simulate', action='store_true', required=False)
     return parser.parse_args()
 
 
