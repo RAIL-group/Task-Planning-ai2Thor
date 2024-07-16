@@ -52,3 +52,15 @@ def preprocess_gcn_data(datum):
     data['is_subgoal'] = torch.tensor(data['is_subgoal'], dtype=torch.long)
     data['is_target'] = torch.tensor(data['is_target'], dtype=torch.long)
     return data
+
+
+def get_pose_from_coord(coords, whole_graph):
+    coords_list = []
+    for node in whole_graph['node_coords']:
+        coords_list.append(tuple(
+            [whole_graph['node_coords'][node][0],
+             whole_graph['node_coords'][node][1]]))
+    if coords in coords_list:
+        pos = coords_list.index(coords)
+        return pos
+    return None

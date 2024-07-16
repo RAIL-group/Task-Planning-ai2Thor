@@ -52,8 +52,7 @@ ENV PYTHONPATH="/pddlstream:${PYTHONPATH}"
 COPY modules/conftest.py modules/conftest.py
 COPY modules/setup.cfg modules/setup.cfg
 
-COPY modules/taskplan modules/taskplan
-RUN pip3 install modules/taskplan
+COPY ai2thor /root/.ai2thor
 COPY modules/gridmap modules/gridmap
 RUN pip3 install modules/gridmap
 COPY modules/lsp_accel modules/lsp_accel
@@ -62,7 +61,9 @@ COPY modules/common modules/common
 RUN pip3 install modules/common
 COPY modules/learning modules/learning
 RUN pip3 install modules/learning
-COPY ai2thor /root/.ai2thor
+COPY modules/taskplan modules/taskplan
+RUN pip3 install modules/taskplan
+
 
 # Set up the starting point for running the code
 COPY entrypoint.sh /entrypoint.sh

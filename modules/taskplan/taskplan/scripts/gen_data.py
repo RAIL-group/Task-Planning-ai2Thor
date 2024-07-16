@@ -8,15 +8,15 @@ import taskplan
 
 
 def gen_data_main(args):
-    # Get procthor data for a send and extract initial object states
+    # Load data for a given seed
     thor_data = taskplan.utilities.ai2thor_helper. \
         ThorInterface(args=args)
 
-    # Get the occupancy grid from proc_data
+    # Get the occupancy grid from data
     grid = thor_data.occupancy_grid
     init_robot_pose = thor_data.get_robot_pose()
 
-    # Get the whole graph from ProcTHOR data
+    # Get the whole graph from data
     whole_graph = thor_data.get_graph()
 
     # Initialize the PartialMap with whole graph

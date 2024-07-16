@@ -1,3 +1,4 @@
+import math
 import random
 import itertools
 import numpy as np
@@ -378,14 +379,14 @@ def get_best_expected_cost_and_frontier_list(subgoals, partial_map, robot_pose, 
 
     # Get robot distances
     robot_distances = get_robot_distances(
-        partial_map, robot_pose, subgoals)
+        partial_map.grid, robot_pose, subgoals)
 
     # Calculate top n subgoals
     subgoals = get_top_n_frontiers(
         subgoals, goal_distances, robot_distances, num_frontiers_max)
 
     # Get subgoal pair distances
-    subgoal_distances = get_subgoal_distances(partial_map, subgoals)
+    subgoal_distances = get_subgoal_distances(partial_map.grid, subgoals)
 
     distances = {
         'frontier': subgoal_distances,

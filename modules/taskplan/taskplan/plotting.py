@@ -1,5 +1,7 @@
+import os
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.animation as animation
 from skimage.morphology import erosion
 
 
@@ -63,4 +65,35 @@ def plot_graph_on_grid(grid, graph):
     for room in rc_idx:
         room_pos = graph['nodes'][room]['pos']
         room_name = graph['nodes'][room]['name']
-        plt.text(room_pos[0], room_pos[1], room_name, color='brown', size=6, rotation=40)
+        plt.text(room_pos[0], room_pos[1], room_name, color='brown',
+                 size=6, rotation=40)
+
+
+def simulate_plan(trajectory, thor_data, args):
+    print(f'Seed[{args.current_seed}]: Making video by simulating plan ...')
+    fig = plt.figure()
+    writer = animation.FFMpegWriter(12)
+    writer.setup(fig, os.path.join(args.save_dir,
+                 f'Eval_{args.current_seed}.mp4'), 500)
+
+    fig_title = 'Seed: [' + str(args.current_seed) + \
+                '] - Planner: [' + args.cost_str + '] - Step: '
+
+    for step, grid_coord in enumerate(
+      list(zip(trajectory[0], trajectory[1]))[::5]):
+        position = thor_data.g2p_map[grid_coord]
+
+        thor_data.controller.step(
+            action="Teleport",
+            position=position,
+            # rotation=dict(x=0, y=90, z=0),
+            horizon=30
+        )
+        plt.clf()
+        top_down_frame = thor_data.get_top_down_frame()
+        plt.imshow(top_down_frame)
+        title = fig_title + str(step+1)
+        plt.title(title, fontsize='10')
+        writer.grab_frame()
+    writer.finish()
+    print(f'Seed[{args.current_seed}]: Video Saved!')
