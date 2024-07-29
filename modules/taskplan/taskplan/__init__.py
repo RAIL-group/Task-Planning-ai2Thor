@@ -4,3 +4,4 @@ from . import scripts  # noqa
 from . import utilities  # noqa
 from . import core  # noqa
 from . import plotting  # noqa
+from . import pddl  # noqa
