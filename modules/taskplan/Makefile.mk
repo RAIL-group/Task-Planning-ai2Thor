@@ -112,6 +112,26 @@ $(eval-find-seeds-learned):
 eval-find-learned: $(eval-find-seeds-learned)
 ##############################
 
+# Object search: all target #
+eval-find-seeds-all = \
+	$(shell for ii in $$(seq 7000 $$((7000 + $(NUM_EVAL_SEEDS) - 1))); \
+		do echo "$(DATA_BASE_DIR)/$(BASENAME)/results/$(EXPERIMENT_NAME)/combined_$${ii}.png"; done)
+$(eval-find-seeds-all): seed = $(shell echo $@ | grep -Eo '[0-9]+' | tail -1)
+$(eval-find-seeds-all):
+	@echo "Evaluating Data [$(BASENAME) | seed: $(seed) | Combined"]
+	@mkdir -p $(DATA_BASE_DIR)/$(BASENAME)/results/$(EXPERIMENT_NAME)
+	@$(call xhost_activate)
+	@$(DOCKER_PYTHON) -m taskplan.scripts.eval_find_all \
+		$(CORE_ARGS) \
+		--save_dir /data/$(BASENAME)/results/$(EXPERIMENT_NAME) \
+	 	--current_seed $(seed) \
+	 	--image_filename combined_$(seed).png \
+	 	--logfile_name combined_logfile.txt \
+		--network_file /data/$(BASENAME)/logs/$(EXPERIMENT_NAME)/gnn.pt
+
+.PHONY: eval-find-all
+eval-find-all: $(eval-find-seeds-all)
+##############################
 
 ### Targets for 3rd-party required downloads ###
 # Procthor 10k dataset download target
