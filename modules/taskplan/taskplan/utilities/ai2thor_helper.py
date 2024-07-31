@@ -42,6 +42,8 @@ class ThorInterface:
                                      width=480, height=480)
         self.occupancy_grid = self.get_occupancy_grid()
 
+        self.known_cost = self.get_known_costs()
+
     def load_scene(self, path='/data/procthor-data'):
         with open(
             f'{path}/data.jsonl',
@@ -268,6 +270,35 @@ class ThorInterface:
         )
 
         return graph
+
+    def get_known_costs(self):
+        known_cost = {'initial_robot_pose': {}}
+        init_r = self.get_robot_pose()
+
+        # get cost from initial robot pose to all containers
+        for container in self.containers:
+            container_id = container['id']
+            known_cost[container_id] = {}
+            container_position = container['position']
+            cost = get_cost(grid=self.occupancy_grid,
+                            robot_pose=init_r,
+                            end=container_position)
+            known_cost['initial_robot_pose'][container_id] = round(cost, 4)
+
+        # get cost from a container to every other container
+        for index, container1 in enumerate(self.containers):
+            cnt1_id = container1['id']
+            cnt1_position = container1['position']
+            for container2 in self.containers[index+1:]:
+                cnt2_id = container2['id']
+                cnt2_position = container2['position']
+                cost = get_cost(grid=self.occupancy_grid,
+                                robot_pose=cnt1_position,
+                                end=cnt2_position)
+                known_cost[cnt1_id][cnt2_id] = round(cost, 4)
+                known_cost[cnt2_id][cnt1_id] = round(cost, 4)
+
+        return known_cost
 
 
 def get_nearest_free_point(point, free_points):
