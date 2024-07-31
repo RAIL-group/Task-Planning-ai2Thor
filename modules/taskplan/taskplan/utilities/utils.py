@@ -1,6 +1,7 @@
 import os
 import glob
 import torch
+import random
 import numpy as np
 from torch_geometric.data import Data
 
@@ -64,3 +65,18 @@ def get_pose_from_coord(coords, whole_graph):
         pos = coords_list.index(coords)
         return pos
     return None
+
+
+def initialize_environment(cnt_node_idx, seed=0):
+    random.seed(seed)
+    sample_count = random.randint(1, len(cnt_node_idx))
+    undiscovered_cnts = random.sample(cnt_node_idx, sample_count)
+    srtd_und_cnts = sorted(undiscovered_cnts)
+    return srtd_und_cnts
+
+
+def get_container_ID(nodes, cnts):
+    set_of_ID = set()
+    for cnt in cnts:
+        set_of_ID.add(nodes[cnt]['id'])
+    return set_of_ID
