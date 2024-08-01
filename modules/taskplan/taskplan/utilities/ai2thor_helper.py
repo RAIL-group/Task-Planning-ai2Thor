@@ -103,12 +103,14 @@ class ThorInterface:
                 scaled_position = self.scale_to_grid(np.array([nearest_fp[0], nearest_fp[1]]))  # noqa: E501
                 # finally set the scaled grid pose as the container position
                 container['position'] = scaled_position  # 2d only
+                container['id'] = container['id'].lower()  # 2d only
 
                 # next do the same if there is any children of this container
                 if 'children' in container:
                     children = container['children']
                     for child in children:
                         child['position'] = container['position']
+                        child['id'] = child['id'].lower()
 
         for room in self.rooms:
             floor = [(rp["x"], rp["z"]) for rp in room["floorPolygon"]]
