@@ -1,14 +1,28 @@
-def get_domain():
-    DOMAIN_PDDL = """
+def get_domain(whole_graph):
+    loc_set = set()
+    for c_idx in whole_graph['cnt_node_idx']:
+        loc_set.add(whole_graph['node_names'][c_idx])
+    loc_str = ''
+    for loc in loc_set:
+        loc_str += ' ' + loc
+
+    obj_set = set()
+    for o_idx in whole_graph['obj_node_idx']:
+        obj_set.add(whole_graph['node_names'][o_idx])
+    obj_str = ''
+    for obj in obj_set:
+        obj_str += ' ' + obj
+
+    DOMAIN_PDDL = f"""
     (define
-    (domain restaurant)
+    (domain indoor)
 
     (:requirements :strips :typing :action-costs :existential-preconditions)
 
     (:types
         location item - object
-        init_r servingtable shelf fountain coffeemachine dishwasher countertop - location
-        napkin mug coffeegrinds water bread knife plate bowl spread - item
+        init_r{loc_str} - location
+        {obj_str} - item
     )
 
     (:predicates
