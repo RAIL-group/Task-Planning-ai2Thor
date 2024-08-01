@@ -1,3 +1,6 @@
+import taskplan
+
+
 def generate_pddl_problem(domain_name, problem_name, objects, init_states,
                           goal_states):
     """
@@ -40,3 +43,20 @@ def generate_pddl_problem(domain_name, problem_name, objects, init_states,
     problem_str += ")\n"
 
     return problem_str
+
+
+def get_pddl_instance(whole_graph, map_data, seed=0):
+    # Initialize the environment setting which containers are undiscovered
+    init_subgoals_idx = taskplan.utilities.utils.initialize_environment(
+        whole_graph['cnt_node_idx'], seed)
+    subgoal_IDs = taskplan.utilities.utils.get_container_ID(
+        whole_graph['nodes'], init_subgoals_idx)
+
+    # initialize pddl related contents
+    pddl = {}
+    pddl['domain'] = taskplan.pddl.domain.get_domain(whole_graph)
+    pddl['problem'] = taskplan.pddl.problem.get_problem(
+        map_data=map_data, unvisited=subgoal_IDs, seed=seed)
+    pddl['planner'] = 'ff-astar2'  # 'max-astar'
+    pddl['subgoals'] = init_subgoals_idx
+    return pddl
