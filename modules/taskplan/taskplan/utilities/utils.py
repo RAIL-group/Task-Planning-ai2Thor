@@ -80,3 +80,45 @@ def get_container_ID(nodes, cnts):
     for cnt in cnts:
         set_of_ID.add(nodes[cnt]['id'])
     return set_of_ID
+
+
+def get_container_pose(cnt_name, partial_map):
+    '''This function takes in a container name and the
+    partial map as input to return the container pose on the grid'''
+    if cnt_name in partial_map.idx_map:
+        return partial_map.container_poses[partial_map.idx_map[cnt_name]]
+    raise ValueError('The container could not be located on the grid!')
+
+
+def get_object_to_find_from_plan(plan, partial_map, init_robot_pose):
+    '''This function takes in a plan and the partial map as
+    input to return the object index to find; limited to finding
+    single object for now.'''
+    find_from = {}
+    find_at = []
+    robot_poses = [init_robot_pose]
+    for action in plan:
+        if action.name == 'move':
+            container_name = action.args[1]
+            container_pose = get_container_pose(container_name, partial_map)
+            robot_poses.append(container_pose)
+        else:
+            robot_poses.append(robot_poses[-1])
+        if action.name == 'find':
+            obj_name = action.args[0]
+            if obj_name in partial_map.idx_map:
+                obj_idx = partial_map.idx_map[obj_name]
+                find_from[obj_idx] = robot_poses[-1]
+            find_at.append(len(robot_poses))
+            # raise ValueError('The object could not be found!')
+    return find_from, find_at, robot_poses
+
+
+def get_pose_action_log(robot_poses):
+    pose_action_log = {}
+    for idx, p in enumerate(robot_poses):
+        if p in pose_action_log:
+            pose_action_log[p].append(idx)
+        else:
+            pose_action_log[p] = [idx]
+    return pose_action_log
