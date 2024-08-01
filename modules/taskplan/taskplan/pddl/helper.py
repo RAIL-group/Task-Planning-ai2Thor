@@ -55,7 +55,7 @@ def get_pddl_instance(whole_graph, map_data, seed=0):
     # initialize pddl related contents
     pddl = {}
     pddl['domain'] = taskplan.pddl.domain.get_domain(whole_graph)
-    pddl['problem'] = taskplan.pddl.problem.get_problem(
+    pddl['problem'], pddl['goal'] = taskplan.pddl.problem.get_problem(
         map_data=map_data, unvisited=subgoal_IDs, seed=seed)
     pddl['planner'] = 'ff-astar2'  # 'max-astar'
     pddl['subgoals'] = init_subgoals_idx
