@@ -72,6 +72,25 @@ $(eval-find-seeds-naive):
 .PHONY: eval-find-naive
 eval-find-naive: $(eval-find-seeds-naive)
 
+# Object search: Naive target #
+eval-task-seeds-naive = \
+	$(shell for ii in $$(seq 7000 $$((7000 + $(NUM_EVAL_SEEDS) - 1))); \
+		do echo "$(DATA_BASE_DIR)/$(BASENAME)/results/$(EXPERIMENT_NAME)/task_naive_$${ii}.png"; done)
+$(eval-task-seeds-naive): seed = $(shell echo $@ | grep -Eo '[0-9]+' | tail -1)
+$(eval-task-seeds-naive):
+	@echo "Evaluating Data [$(BASENAME) | seed: $(seed) | Naive"]
+	@mkdir -p $(DATA_BASE_DIR)/$(BASENAME)/results/$(EXPERIMENT_NAME)
+	@$(call xhost_activate)
+	@$(DOCKER_PYTHON) -m taskplan.scripts.eval_task \
+		$(CORE_ARGS) \
+		--save_dir /data/$(BASENAME)/results/$(EXPERIMENT_NAME) \
+	 	--current_seed $(seed) \
+	 	--image_filename task_naive_$(seed).png \
+	 	--logfile_name task_naive_logfile.txt
+
+.PHONY: eval-task-naive
+eval-task-naive: $(eval-task-seeds-naive)
+
 # Object search: Known target #
 eval-find-seeds-known = \
 	$(shell for ii in $$(seq 7000 $$((7000 + $(NUM_EVAL_SEEDS) - 1))); \
