@@ -29,7 +29,8 @@ def evaluate_main(args):
         map_data=thor_data,
         seed=args.current_seed
     )
-    plan, cost = solve_from_pddl(pddl['domain'], pddl['problem'], planner=pddl['planner'])
+    plan, cost = solve_from_pddl(pddl['domain'], pddl['problem'],
+                                 planner=pddl['planner'], max_planner_time=300)
     if plan:
         for p in plan:
             print(p)
@@ -65,7 +66,11 @@ def evaluate_main(args):
         planning_loop = taskplan.planners.planning_loop.PlanningLoop(
             partial_map=partial_map, robot=find_from[obj_idx],
             args=args, verbose=True, close_loop=True)
-        planning_loop.subgoals = pddl['subgoals']
+        # we set the subgoals from pddl initialization
+        # however, for each search we reconsider the subgoals to be unexplored
+        # by copying; remove copy to continue from same state but in that
+        # case the pddl problem needs to update and pddl solver rerun
+        planning_loop.subgoals = pddl['subgoals'].copy()
 
         for counter, step_data in enumerate(planning_loop):
             # Update the planner objects
@@ -84,11 +89,6 @@ def evaluate_main(args):
 
         search_poses.append(planning_loop.robot)
 
-    # print(known_poses)
-    # for idx, f_at in enumerate(find_at):
-    #     print(f'{f_at}: {search_poses[idx]}')
-    # print(pose_action_log)
-    # raise NotImplementedError
     distances = []
     trajectories = []
     k_dist, k_traj = taskplan.core.compute_path_cost(partial_map.grid, known_poses)
@@ -108,11 +108,29 @@ def evaluate_main(args):
                 f" | {cost_str}: {dist:0.3f}\n")
 
     plt.clf()
-    plt.figure(figsize=(10, 4))
+    plt.figure(figsize=(10, 6))
     plt.suptitle(f"{pddl['goal']} - seed: [{args.current_seed}]", fontsize=9)
 
-    plt.subplot(131)
-    # 1 plot the graph overlaied image
+    plt.subplot(221)
+    # 1 plot the whole graph
+    plt.title('Whole scene graph', fontsize=6)
+    graph_image = whole_graph['graph_image']
+    plt.imshow(graph_image)
+    plt.box(False)
+    # Hide x and y ticks
+    plt.xticks([])
+    plt.yticks([])
+
+    plt.subplot(222)
+    # 2 plot the top-dwon-view
+    top_down_frame = thor_data.get_top_down_frame()
+    plt.imshow(top_down_frame)
+    plt.title('Top-down view of the map', fontsize=6)
+    plt.xticks(fontsize=5)
+    plt.yticks(fontsize=5)
+
+    plt.subplot(223)
+    # 3 plot the graph overlaied image
     taskplan.plotting.plot_graph_on_grid(grid, whole_graph)
     x, y = init_robot_pose
     plt.text(x, y, '+', color='red', size=6, rotation=45)
@@ -120,8 +138,8 @@ def evaluate_main(args):
     plt.xticks(fontsize=5)
     plt.yticks(fontsize=5)
 
-    plt.subplot(132)
-    # 2 plot the grid with trajectory viridis color
+    plt.subplot(224)
+    # 4 plot the grid with trajectory viridis color
     plotting_grid = taskplan.plotting.make_plotting_grid(
         np.transpose(grid)
     )
@@ -129,18 +147,6 @@ def evaluate_main(args):
     plt.title(f"{cost_str} Cost: {dist:0.3f}", fontsize=6)
     plt.xticks(fontsize=5)
     plt.yticks(fontsize=5)
-    # x, y = path[0]
-    # plt.text(x, y, '0 - ROBOT', color='brown', size=4)
-
-    # for idx, coords in enumerate(path[1:]):
-    #     # find the node_idx for this pose and use it through
-    #     # graph['node_coords']
-    #     pose = taskplan.utilities.utils. \
-    #         get_pose_from_coord(coords, whole_graph)
-    #     x = whole_graph['node_coords'][pose][0]
-    #     y = whole_graph['node_coords'][pose][1]
-    #     name = whole_graph['node_names'][pose]
-    #     plt.text(x, y, f'{idx+1} - {pose}:{name}', color='brown', size=4)
 
     reds_cmap = plt.get_cmap('Reds')
     for traj in trajectories[1:]:
@@ -162,13 +168,6 @@ def evaluate_main(args):
         y = trajectories[0][1][idx]
         plt.plot(x, y, color=line_colors[idx], marker='.', markersize=3)
 
-    plt.subplot(133)
-    # 3 plot the top-dwon-view
-    top_down_frame = thor_data.get_top_down_frame()
-    plt.imshow(top_down_frame)
-    plt.title('Top-down view of the map', fontsize=6)
-    plt.xticks(fontsize=5)
-    plt.yticks(fontsize=5)
     plt.savefig(f'{args.save_dir}/{args.image_filename}', dpi=1200)
 
 
