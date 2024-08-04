@@ -15,7 +15,8 @@ import gridmap
 IGNORE_CONTAINERS = [
     'baseballbat', 'basketBall', 'boots', 'desklamp', 'painting',
     'floorlamp', 'houseplant', 'roomdecor', 'showercurtain',
-    'showerhead', 'television', 'vacuumcleaner', 'photo', 'plunger'
+    'showerhead', 'television', 'vacuumcleaner', 'photo', 'plunger',
+    'basketball', 'box'
 ]
 
 
@@ -236,7 +237,7 @@ class ThorInterface:
 
         # Add edges to get a connected graph if not already connected
         req_edges = get_edges_for_connected_graph(self.occupancy_grid, graph)
-        graph['edge_index'] = graph['edge_index'] + req_edges
+        graph['edge_index'] = req_edges + graph['edge_index']
 
         # perform some more formatting for the graph, then return
         node_coords = {}
