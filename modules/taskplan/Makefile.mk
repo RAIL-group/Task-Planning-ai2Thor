@@ -90,6 +90,7 @@ $(eval-task-seeds-naive):
 
 .PHONY: eval-task-naive
 eval-task-naive: $(eval-task-seeds-naive)
+	$(MAKE) result-naive
 
 # Object search: Known target #
 eval-find-seeds-known = \
@@ -149,6 +150,7 @@ $(eval-task-seeds-learned):
 
 .PHONY: eval-task-learned
 eval-task-learned: $(eval-task-seeds-learned)
+	$(MAKE) result-learned
 ##############################
 
 # Object search: all target #
@@ -193,3 +195,17 @@ download:
 	$(MAKE) download-procthor-10k
 	$(MAKE) download-sbert
 ################################################
+
+# Results processing targets
+.PHONY: result-learned
+result-learned:
+	@$(DOCKER_PYTHON) -m taskplan.scripts.result \
+		--data_file /data/$(BASENAME)/results/$(EXPERIMENT_NAME)/task_learned_logfile.txt \
+		--learned
+
+.PHONY: result-naive
+result-naive:
+	@$(DOCKER_PYTHON) -m taskplan.scripts.result \
+		--data_file /data/$(BASENAME)/results/$(EXPERIMENT_NAME)/task_naive_logfile.txt \
+		--naive
+#############################
