@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 from pddlstream.algorithms.search import solve_from_pddl
 
 import taskplan
-from taskplan.planners.planner import ClosestActionPlanner
+from taskplan.planners.planner import ClosestActionPlanner, LearnedPlanner
 
 
 def evaluate_main(args):
@@ -44,7 +44,7 @@ def evaluate_main(args):
     find_from, find_at, known_poses = taskplan.utilities.utils.get_object_to_find_from_plan(
         plan=plan, partial_map=partial_map, init_robot_pose=init_robot_pose)
 
-    pose_action_log = taskplan.utilities.utils.get_pose_action_log(known_poses)
+    # pose_action_log = taskplan.utilities.utils.get_pose_action_log(known_poses)
 
     # Intialize logfile
     logfile = os.path.join(args.save_dir, args.logfile_name)
@@ -53,9 +53,9 @@ def evaluate_main(args):
     if args.logfile_name == 'task_naive_logfile.txt':
         planner = ClosestActionPlanner(args, partial_map)
         cost_str = 'naive'
-    # elif args.logfile_name == 'learned_logfile.txt':
-    #     planner = LearnedPlanner(args, partial_map, verbose=True)
-    #     cost_str = 'learned'
+    elif args.logfile_name == 'task_learned_logfile.txt':
+        planner = LearnedPlanner(args, partial_map, verbose=True)
+        cost_str = 'learned'
     # elif args.logfile_name == 'known_logfile.txt':
     #     planner = KnownPlanner(args, partial_map)
     #     cost_str = 'known'
