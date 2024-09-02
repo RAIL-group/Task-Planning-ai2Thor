@@ -128,9 +128,25 @@ def get_domain(whole_graph):
         )
     )
 
+    ;(:action find
+    ;    :parameters (?obj - item)
+    ;    :precondition (and
+    ;        (not (is-located ?obj))
+    ;        (is-pickable ?obj)
+    ;        (hand-is-free)
+    ;    )
+    ;    :effect (and
+    ;        (is-located ?obj)
+    ;        (not (hand-is-free))
+    ;        (is-holding ?obj)
+    ;        (increase (total-cost) (find-cost ?obj))
+    ;    )
+    ;)
+
     (:action find
-        :parameters (?obj - item)
+        :parameters (?obj - item ?loc - location)
         :precondition (and
+            (rob-at ?loc)
             (not (is-located ?obj))
             (is-pickable ?obj)
             (hand-is-free)
