@@ -47,7 +47,7 @@ def get_domain(whole_graph):
 
     (:functions
         (known-cost ?start ?end)
-        (find-cost ?obj)
+        (find-cost ?obj ?loc)
         (total-cost)
     )
 
@@ -146,6 +146,7 @@ def get_domain(whole_graph):
     (:action find
         :parameters (?obj - item ?loc - location)
         :precondition (and
+            (not (rob-at initial_robot_pose))
             (rob-at ?loc)
             (not (is-located ?obj))
             (is-pickable ?obj)
@@ -155,7 +156,7 @@ def get_domain(whole_graph):
             (is-located ?obj)
             (not (hand-is-free))
             (is-holding ?obj)
-            (increase (total-cost) (find-cost ?obj))
+            (increase (total-cost) (find-cost ?obj ?loc))
         )
     )
 
