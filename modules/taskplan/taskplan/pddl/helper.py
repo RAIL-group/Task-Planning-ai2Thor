@@ -95,7 +95,7 @@ def update_problem(problem, obj, loc, distance):
     return updated_pddl_problem
 
 
-def get_learning_informed_plan(pddl, partial_map, subgoals, robot_pose, args):
+def get_learning_informed_plan_old(pddl, partial_map, subgoals, robot_pose, args):
     ''' This function takes input of a PDDL instance, the partial map,
     the subgoals, and the current robot pose, args for nn-file.
     '''
@@ -130,4 +130,60 @@ def get_learning_informed_plan(pddl, partial_map, subgoals, robot_pose, args):
         # print('Plan:', plan)
         # print('Cost:', cost)
         print('Exp cost: ', expected_cost)
+    return plan, cost
+
+
+def get_learning_informed_plan(pddl, partial_map, subgoals, init_robot_pose, learned_net):
+    ''' This function takes input of a PDDL instance, the partial map,
+    the subgoals, and the current robot pose, args for nn-file.
+    '''
+    idx2assetID = {partial_map.idx_map[assetID]: assetID for assetID in partial_map.idx_map}
+
+    for obj_idx in partial_map.obj_node_idx:
+        obj_cnt_idx = partial_map.org_edge_index[0][partial_map.org_edge_index[1].index(obj_idx)]
+        obj_name = idx2assetID[obj_idx]
+
+        # update from the initial robot location
+        if obj_cnt_idx in subgoals:
+            distance_update = get_expected_cost_of_finding(
+                    partial_map, subgoals, obj_name, init_robot_pose, learned_net)
+            curr_rob = 'initial_robot_pose'
+            pddl['problem'] = update_problem(
+                pddl['problem'], obj_name, curr_rob, distance_update)
+        else:
+            distance_update = 2 * taskplan.utilities.ai2thor_helper.get_cost(
+                grid=partial_map.grid, robot_pose=init_robot_pose,
+                end=partial_map.node_coords[obj_cnt_idx]
+            )
+            curr_rob = 'initial_robot_pose'
+            pddl['problem'] = update_problem(
+                pddl['problem'], obj_name, curr_rob, distance_update)
+
+        for cnt_idx in partial_map.cnt_node_idx:
+            # if container is in subgoals, that means the object is in unknown space
+            if obj_cnt_idx in subgoals:
+                # update for other containers
+                robot_pose = partial_map.node_coords[cnt_idx]
+                distance_update = get_expected_cost_of_finding(
+                        partial_map, subgoals, obj_name, robot_pose, learned_net)
+                curr_rob = idx2assetID[cnt_idx]
+                pddl['problem'] = update_problem(
+                    pddl['problem'], obj_name, curr_rob, distance_update)
+
+            # else the object is is known space
+            else:
+                # update for other containers
+                robot_pose = partial_map.node_coords[cnt_idx]
+                distance_update = 2 * taskplan.utilities.ai2thor_helper.get_cost(
+                    grid=partial_map.grid,
+                    robot_pose=partial_map.node_coords[cnt_idx],
+                    end=partial_map.node_coords[obj_cnt_idx]
+                )
+                curr_rob = idx2assetID[cnt_idx]
+                pddl['problem'] = update_problem(
+                    pddl['problem'], obj_name, curr_rob, distance_update)
+
+    plan, cost = solve_from_pddl(pddl['domain'], pddl['problem'],
+                                 planner=pddl['planner'], max_planner_time=300)
+
     return plan, cost
