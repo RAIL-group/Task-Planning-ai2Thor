@@ -51,7 +51,7 @@ def test_learned_plan():
 
     plan, cost = get_learning_informed_plan(
             pddl=pddl, partial_map=partial_map,
-            subgoals=pddl['subgoals'], robot_pose=init_robot_pose,
+            subgoals=pddl['subgoals'], init_robot_pose=init_robot_pose,
             learned_net=args.network_file)
 
     if plan:
