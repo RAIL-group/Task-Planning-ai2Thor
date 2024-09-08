@@ -9,6 +9,7 @@ from pddlstream.algorithms.search import solve_from_pddl
 
 import taskplan
 from taskplan.planners.planner import ClosestActionPlanner, LearnedPlanner
+from taskplan.pddl.helper import get_learning_informed_plan
 
 
 def evaluate_main(args):
@@ -29,8 +30,18 @@ def evaluate_main(args):
         map_data=thor_data,
         seed=args.current_seed
     )
-    plan, cost = solve_from_pddl(pddl['domain'], pddl['problem'],
-                                 planner=pddl['planner'], max_planner_time=300)
+
+    # Initialize the PartialMap with whole graph
+    partial_map = taskplan.core.PartialMap(whole_graph, grid, distinct=True)
+
+    if args.logfile_name == 'task_learned_logfile.txt':
+        plan, cost = get_learning_informed_plan(
+            pddl=pddl, partial_map=partial_map,
+            subgoals=pddl['subgoals'], init_robot_pose=init_robot_pose,
+            learned_net=args.network_file)
+    else:
+        plan, cost = solve_from_pddl(pddl['domain'], pddl['problem'],
+                                     planner=pddl['planner'], max_planner_time=300)
     if plan:
         for p in plan:
             print(p)
@@ -39,8 +50,6 @@ def evaluate_main(args):
         plt.savefig(f'{args.save_dir}/{args.image_filename}', dpi=1200)
         exit()
 
-    # Initialize the PartialMap with whole graph
-    partial_map = taskplan.core.PartialMap(whole_graph, grid, distinct=True)
     find_from, find_at, known_poses = taskplan.utilities.utils.get_object_to_find_from_plan(
         plan=plan, partial_map=partial_map, init_robot_pose=init_robot_pose)
 
@@ -53,12 +62,12 @@ def evaluate_main(args):
     if args.logfile_name == 'task_naive_logfile.txt':
         planner = ClosestActionPlanner(args, partial_map)
         cost_str = 'naive'
+    elif args.logfile_name == 'task_learned_sp_logfile.txt':
+        planner = LearnedPlanner(args, partial_map, verbose=True)
+        cost_str = 'learned_sp'
     elif args.logfile_name == 'task_learned_logfile.txt':
         planner = LearnedPlanner(args, partial_map, verbose=True)
         cost_str = 'learned'
-    # elif args.logfile_name == 'known_logfile.txt':
-    #     planner = KnownPlanner(args, partial_map)
-    #     cost_str = 'known'
 
     search_poses = []
     for obj_idx in find_from:
