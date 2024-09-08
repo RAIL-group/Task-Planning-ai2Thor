@@ -40,6 +40,23 @@ def process_naive_data(args):
     )
 
 
+def process_learned_sp_data(args):
+    """Preprocessing function for planner with Learned Search Policy"""
+    data = []
+
+    for line in open(args.data_file).readlines():
+        d = re.match(r'.*?s: (.*?) . learned_sp: (.*?)\n', line)
+        if d is None:
+            continue
+        d = d.groups()
+        data.append([int(d[0]), float(d[1])])
+
+    return pd.DataFrame(
+        data,
+        columns=['seed', 'LEARNED_SP']
+    )
+
+
 def process_data(args):
     """Preprocessing function for all planner"""
     data = []
@@ -136,6 +153,7 @@ if __name__ == "__main__":
                         required=False, default=None)
     parser.add_argument('--learned', action='store_true')
     parser.add_argument('--naive', action='store_true')
+    parser.add_argument('--learned_sp', action='store_true')
     args = parser.parse_args()
 
     if args.learned:
@@ -143,6 +161,9 @@ if __name__ == "__main__":
         print(data.describe())
     elif args.naive:
         data = process_naive_data(args)
+        print(data.describe())
+    elif args.learned_sp:
+        data = process_learned_sp_data(args)
         print(data.describe())
     else:
         data = process_data(args)
