@@ -112,13 +112,3 @@ def get_object_to_find_from_plan(plan, partial_map, init_robot_pose):
             find_at.append(len(robot_poses))
             # raise ValueError('The object could not be found!')
     return find_from, find_at, robot_poses
-
-
-def get_pose_action_log(robot_poses):
-    pose_action_log = {}
-    for idx, p in enumerate(robot_poses):
-        if p in pose_action_log:
-            pose_action_log[p].append(idx)
-        else:
-            pose_action_log[p] = [idx]
-    return pose_action_log
