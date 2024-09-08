@@ -131,13 +131,34 @@ $(eval-find-seeds-learned):
 .PHONY: eval-find-learned
 eval-find-learned: $(eval-find-seeds-learned)
 
-# Task Plan: Learned target #
+# Task Plan: Learned Search Policy #
+eval-task-seeds-learned-sp = \
+	$(shell for ii in $$(seq 7000 $$((7000 + $(NUM_EVAL_SEEDS) - 1))); \
+		do echo "$(DATA_BASE_DIR)/$(BASENAME)/results/$(EXPERIMENT_NAME)/task_learned_sp_$${ii}.png"; done)
+$(eval-task-seeds-learned-sp): seed = $(shell echo $@ | grep -Eo '[0-9]+' | tail -1)
+$(eval-task-seeds-learned-sp):
+	@echo "Evaluating Data [$(BASENAME) | seed: $(seed) | Learned Search Policy"]
+	@mkdir -p $(DATA_BASE_DIR)/$(BASENAME)/results/$(EXPERIMENT_NAME)
+	@$(call xhost_activate)
+	@$(DOCKER_PYTHON) -m taskplan.scripts.eval_task \
+		$(CORE_ARGS) \
+		--save_dir /data/$(BASENAME)/results/$(EXPERIMENT_NAME) \
+	 	--current_seed $(seed) \
+	 	--image_filename task_learned_sp_$(seed).png \
+	 	--logfile_name task_learned_sp_logfile.txt \
+		--network_file /data/$(BASENAME)/logs/$(EXPERIMENT_NAME)/gnn.pt
+
+.PHONY: eval-task-learned-sp
+eval-task-learned-sp: $(eval-task-seeds-learned-sp)
+	$(MAKE) result-learned-sp
+
+# Task Plan: Learned Search Policy + Learned Expected Cost #
 eval-task-seeds-learned = \
 	$(shell for ii in $$(seq 7000 $$((7000 + $(NUM_EVAL_SEEDS) - 1))); \
 		do echo "$(DATA_BASE_DIR)/$(BASENAME)/results/$(EXPERIMENT_NAME)/task_learned_$${ii}.png"; done)
 $(eval-task-seeds-learned): seed = $(shell echo $@ | grep -Eo '[0-9]+' | tail -1)
 $(eval-task-seeds-learned):
-	@echo "Evaluating Data [$(BASENAME) | seed: $(seed) | Learned"]
+	@echo "Evaluating Data [$(BASENAME) | seed: $(seed) | Learned Search Policy + Expected Cost"]
 	@mkdir -p $(DATA_BASE_DIR)/$(BASENAME)/results/$(EXPERIMENT_NAME)
 	@$(call xhost_activate)
 	@$(DOCKER_PYTHON) -m taskplan.scripts.eval_task \
@@ -202,6 +223,12 @@ result-learned:
 	@$(DOCKER_PYTHON) -m taskplan.scripts.result \
 		--data_file /data/$(BASENAME)/results/$(EXPERIMENT_NAME)/task_learned_logfile.txt \
 		--learned
+
+.PHONY: result-learned-sp
+result-learned-sp:
+	@$(DOCKER_PYTHON) -m taskplan.scripts.result \
+		--data_file /data/$(BASENAME)/results/$(EXPERIMENT_NAME)/task_learned_sp_logfile.txt \
+		--learned_sp
 
 .PHONY: result-naive
 result-naive:
