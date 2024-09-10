@@ -40,14 +40,17 @@ def get_problem(map_data, unvisited, seed=0):
 
                 if cnt_name in unvisited:
                     init_states.append(f"(not (is-located {child_name}))")
-                    # init_states.append(f"(= (find-cost {child_name} {cnt_name}) 0)")
                 else:
                     init_states.append(f"(is-located {child_name})")
                     init_states.append(f"(is-at {child_name} {cnt_name})")
-                for loc in containers:
-                    loc_name = loc['id']
-                    init_states.append(f"(= (find-cost {child_name} {loc_name}) 0)")
-                init_states.append(f"(= (find-cost {child_name} initial_robot_pose) 0)")
+
+                cnt_names = ['initial_robot_pose']
+                cnt_names += [loc['id'] for loc in containers]
+
+                for from_loc in cnt_names:
+                    for to_loc in cnt_names:
+                        init_states.append(f"(= (find-cost {child_name} {from_loc} {to_loc}) 0)")
+
     #             if 'isLiquid' in child and child['isLiquid'] == 1:
     #                 init_states.append(f"(is-liquid {chld_name})")
     #             if 'pickable' in child and child['pickable'] == 1:
