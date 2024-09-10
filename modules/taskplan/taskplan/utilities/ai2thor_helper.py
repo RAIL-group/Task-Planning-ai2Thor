@@ -287,6 +287,7 @@ class ThorInterface:
                             robot_pose=init_r,
                             end=container_position)
             known_cost['initial_robot_pose'][container_id] = round(cost, 4)
+            known_cost[container_id]['initial_robot_pose'] = round(cost, 4)
 
         # get cost from a container to every other container
         for index, container1 in enumerate(self.containers):
