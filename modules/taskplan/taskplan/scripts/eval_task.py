@@ -120,7 +120,11 @@ def evaluate_main(args):
     plt.figure(figsize=(10, 6))
     plt.suptitle(f"{pddl['goal']} - seed: [{args.current_seed}]", fontsize=9)
 
-    plt.subplot(221)
+    plt.subplot(231)
+    # 0 plot the plan
+    taskplan.plotting.plot_plan(plan=plan)
+
+    plt.subplot(232)
     # 1 plot the whole graph
     plt.title('Whole scene graph', fontsize=6)
     graph_image = whole_graph['graph_image']
@@ -130,7 +134,7 @@ def evaluate_main(args):
     plt.xticks([])
     plt.yticks([])
 
-    plt.subplot(222)
+    plt.subplot(233)
     # 2 plot the top-dwon-view
     top_down_frame = thor_data.get_top_down_frame()
     plt.imshow(top_down_frame)
@@ -138,7 +142,7 @@ def evaluate_main(args):
     plt.xticks(fontsize=5)
     plt.yticks(fontsize=5)
 
-    plt.subplot(223)
+    plt.subplot(235)
     # 3 plot the graph overlaied image
     taskplan.plotting.plot_graph_on_grid(grid, whole_graph)
     x, y = init_robot_pose
@@ -147,7 +151,7 @@ def evaluate_main(args):
     plt.xticks(fontsize=5)
     plt.yticks(fontsize=5)
 
-    plt.subplot(224)
+    plt.subplot(236)
     # 4 plot the grid with trajectory viridis color
     plotting_grid = taskplan.plotting.make_plotting_grid(
         np.transpose(grid)
