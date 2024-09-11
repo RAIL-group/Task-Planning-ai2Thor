@@ -277,25 +277,20 @@ class ThorInterface:
     def get_known_costs(self):
         known_cost = {'initial_robot_pose': {}}
         init_r = self.get_robot_pose()
+        cnt_ids = ['initial_robot_pose'] + [cnt['id'] for cnt in self.containers]
+        cnt_positions = [init_r] + [cnt['position'] for cnt in self.containers]
 
-        # get cost from initial robot pose to all containers
-        for container in self.containers:
-            container_id = container['id']
-            known_cost[container_id] = {}
-            container_position = container['position']
-            cost = get_cost(grid=self.occupancy_grid,
-                            robot_pose=init_r,
-                            end=container_position)
-            known_cost['initial_robot_pose'][container_id] = round(cost, 4)
-            known_cost[container_id]['initial_robot_pose'] = round(cost, 4)
-
-        # get cost from a container to every other container
-        for index, container1 in enumerate(self.containers):
-            cnt1_id = container1['id']
-            cnt1_position = container1['position']
-            for container2 in self.containers[index+1:]:
-                cnt2_id = container2['id']
-                cnt2_position = container2['position']
+        # get cost from one container to another
+        for index1, cnt1_id in enumerate(cnt_ids):
+            cnt1_position = cnt_positions[index1]
+            known_cost[cnt1_id] = {}
+            for index2, cnt2_id in enumerate(cnt_ids):
+                if cnt2_id not in known_cost:
+                    known_cost[cnt2_id] = {}
+                if cnt1_id == cnt2_id:
+                    known_cost[cnt1_id][cnt2_id] = 0.0
+                    continue
+                cnt2_position = cnt_positions[index2]
                 cost = get_cost(grid=self.occupancy_grid,
                                 robot_pose=cnt1_position,
                                 end=cnt2_position)
