@@ -38,18 +38,41 @@ def get_problem(map_data, unvisited, seed=0):
                 else:
                     objects[gen_name_child].append(child_name)
 
-                if cnt_name in unvisited:
-                    init_states.append(f"(not (is-located {child_name}))")
-                else:
-                    init_states.append(f"(is-located {child_name})")
-                    init_states.append(f"(is-at {child_name} {cnt_name})")
-
                 cnt_names = ['initial_robot_pose']
                 cnt_names += [loc['id'] for loc in containers]
 
-                for from_loc in cnt_names:
-                    for to_loc in cnt_names:
-                        init_states.append(f"(= (find-cost {child_name} {from_loc} {to_loc}) 0)")
+                if cnt_name in unvisited:
+                    # Object is in the unknown space
+                    init_states.append(f"(not (is-located {child_name}))")
+
+                    # The expected find cost needs to be computed via the
+                    # model later on. But here we use the optimistic find cost
+
+                    # --- ROOM FOR IMPROVEMENT --- #
+                    # if either of the from-loc/to-loc is in subgoals then
+                    # the optimistic assumtion would be the missing object can
+                    # be found in either. So, taking the distance of from-loc
+                    # to to-loc is sufficient
+                    for from_loc in cnt_names:
+                        for to_loc in cnt_names:
+                            d = map_data.known_cost[from_loc][to_loc]
+                            init_states.append(f"(= (find-cost {child_name} {from_loc} {to_loc}) {d})")
+                    # or else we can optimistically assume the object is in the nearest
+                    # undiscovered location from the to-loc [WILL work on it later!!]
+                else:
+                    # Object is in the known space
+                    init_states.append(f"(is-located {child_name})")
+                    init_states.append(f"(is-at {child_name} {cnt_name})")
+
+                    # The expected find cost should be sum of the cost to
+                    # cnt_name from the from_loc and then the cost to to_loc
+                    # from the cnt_name
+                    for from_loc in cnt_names:
+                        for to_loc in cnt_names:
+                            d1 = map_data.known_cost[from_loc][cnt_name]
+                            d2 = map_data.known_cost[cnt_name][to_loc]
+                            d = d1 + d2
+                            init_states.append(f"(= (find-cost {child_name} {from_loc} {to_loc}) {d})")
 
     #             if 'isLiquid' in child and child['isLiquid'] == 1:
     #                 init_states.append(f"(is-liquid {chld_name})")
