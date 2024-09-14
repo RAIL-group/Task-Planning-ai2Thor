@@ -456,45 +456,6 @@ def get_subgoal_distances(grid, subgoals):
     return subgoal_distances
 
 
-# def get_robot_distances(partial_map, robot_pose, subgoals):
-#     ''' This function returns distance from the robot to the subgoals
-#     where poses are stored in grid cell coordinates.'''
-#     robot_distances = dict()
-
-#     r_idx_map = {partial_map.idx_map[k]: k for k in partial_map.idx_map}
-#     idx_pos = taskplan.utils.get_pos_from_coord(
-#         robot_pose, partial_map.node_coords)
-
-#     if idx_pos is None:
-#         curr_rob = 'initial_robot_pose'
-#     else:
-#         curr_rob = r_idx_map[idx_pos]
-#     for subgoal in subgoals:
-#         next_rob = r_idx_map[subgoal.value]
-#         cost = partial_map.distances[curr_rob][next_rob]
-#         robot_distances[subgoal] = cost
-
-#     return robot_distances
-
-
-# def get_subgoal_distances(partial_map, subgoals):
-#     ''' This function returns distance from any subgoal to other subgoals
-#     where poses are stored in grid cell coordinates.'''
-#     subgoal_distances = {}
-
-#     r_idx_map = {partial_map.idx_map[k]: k for k in partial_map.idx_map}
-
-#     for idx, sg_1 in enumerate(subgoals[:-1]):
-#         curr = r_idx_map[sg_1.value]
-#         for sg_2 in subgoals[idx + 1:]:
-#             fsg_set = frozenset([sg_1, sg_2])
-#             next = r_idx_map[sg_2.value]
-#             cost = partial_map.distances[curr][next]
-#             subgoal_distances[fsg_set] = cost
-
-#     return subgoal_distances
-
-
 def compute_path_cost(grid, path):
     ''' This function returns the total path and path cost
     given the occupancy grid and the trjectory as poses, the
