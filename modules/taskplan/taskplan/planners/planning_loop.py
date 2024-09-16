@@ -2,7 +2,7 @@ import time
 
 
 class PlanningLoop():
-    def __init__(self, partial_map, robot, args,
+    def __init__(self, partial_map, robot, destination, args,
                  verbose=False, close_loop=False):
         self.partial_map = partial_map
         self.graph, self.subgoals = self.partial_map. \
@@ -10,6 +10,7 @@ class PlanningLoop():
         self.goal = partial_map.target_container
         self.robot = []
         self.robot.append(robot)
+        self.destination = destination
         self.args = args
         self.did_succeed = True
         self.verbose = verbose
@@ -53,6 +54,8 @@ class PlanningLoop():
         # add initial robot pose at the end to close the search loop
         if self.close_loop:
             self.robot.append(self.robot[0])
+        elif self.robot[-1] != self.destination:
+            self.robot.append(self.destination)
 
         if self.verbose:
             print("TOTAL TIME:", time.time() - fn_start_time)
