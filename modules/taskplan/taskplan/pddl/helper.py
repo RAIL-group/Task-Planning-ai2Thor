@@ -66,7 +66,8 @@ def get_pddl_instance(whole_graph, map_data, seed=0):
     return pddl
 
 
-def get_expected_cost_of_finding(partial_map, subgoals, obj_name, robot_pose,
+def get_expected_cost_of_finding(partial_map, subgoals, obj_name,
+                                 robot_pose, destination,
                                  learned_net='/data/taskplan/logs/01_cost_fix/gnn.pt'):
     ''' This function calculates and returns the expected cost of finding an object
     given the partial map, initial subgoals, object name, initial robot pose, and a
@@ -78,18 +79,19 @@ def get_expected_cost_of_finding(partial_map, subgoals, obj_name, robot_pose,
 
     args = lambda: None
     args.network_file = learned_net
-    planner = LearnedPlanner(args, partial_map, verbose=False)
+    planner = LearnedPlanner(args, partial_map,
+                             verbose=False, destination=destination)
     planner.update(graph, subgoals, robot_pose)
     exp_cost, _ = planner.compute_selected_subgoal(return_cost=True)
     return round(exp_cost, 4)
 
 
-def update_problem(problem, obj, loc, distance):
-    x = f'(= (find-cost {obj} {loc}) 0)'
+def update_problem(problem, obj, from_loc, to_loc, distance):
+    x = f'(= (find-cost {obj} {from_loc} {to_loc}) '
     lines = problem.splitlines()
     for line_idx, line in enumerate(lines):
         if x in line:
-            line = line[:-2] + f'{distance})'
+            line = '        ' + x + f'{distance})'
             lines[line_idx] = line
     updated_pddl_problem = '\n'.join(lines)
     return updated_pddl_problem
@@ -143,45 +145,22 @@ def get_learning_informed_plan(pddl, partial_map, subgoals, init_robot_pose, lea
         obj_cnt_idx = partial_map.org_edge_index[0][partial_map.org_edge_index[1].index(obj_idx)]
         obj_name = idx2assetID[obj_idx]
 
-        # update from the initial robot location
+        cnt_names = ['initial_robot_pose']
+        cnt_names += [idx2assetID[cnt_idx] for cnt_idx in partial_map.cnt_node_idx]
+
+        cnt_coords = [init_robot_pose]
+        cnt_coords += [partial_map.node_coords[cnt_idx] for cnt_idx in partial_map.cnt_node_idx]
+
         if obj_cnt_idx in subgoals:
-            distance_update = get_expected_cost_of_finding(
-                    partial_map, subgoals, obj_name, init_robot_pose, learned_net)
-            curr_rob = 'initial_robot_pose'
-            pddl['problem'] = update_problem(
-                pddl['problem'], obj_name, curr_rob, distance_update)
-        else:
-            distance_update = 2 * taskplan.utilities.ai2thor_helper.get_cost(
-                grid=partial_map.grid, robot_pose=init_robot_pose,
-                end=partial_map.node_coords[obj_cnt_idx]
-            )
-            curr_rob = 'initial_robot_pose'
-            pddl['problem'] = update_problem(
-                pddl['problem'], obj_name, curr_rob, distance_update)
-
-        for cnt_idx in partial_map.cnt_node_idx:
-            # if container is in subgoals, that means the object is in unknown space
-            if obj_cnt_idx in subgoals:
-                # update for other containers
-                robot_pose = partial_map.node_coords[cnt_idx]
-                distance_update = get_expected_cost_of_finding(
-                        partial_map, subgoals, obj_name, robot_pose, learned_net)
-                curr_rob = idx2assetID[cnt_idx]
-                pddl['problem'] = update_problem(
-                    pddl['problem'], obj_name, curr_rob, distance_update)
-
-            # else the object is is known space
-            else:
-                # update for other containers
-                robot_pose = partial_map.node_coords[cnt_idx]
-                distance_update = 2 * taskplan.utilities.ai2thor_helper.get_cost(
-                    grid=partial_map.grid,
-                    robot_pose=partial_map.node_coords[cnt_idx],
-                    end=partial_map.node_coords[obj_cnt_idx]
-                )
-                curr_rob = idx2assetID[cnt_idx]
-                pddl['problem'] = update_problem(
-                    pddl['problem'], obj_name, curr_rob, distance_update)
+            # Object whereabout is unknwon
+            for from_idx, from_loc in enumerate(cnt_names):
+                robot_pose = cnt_coords[from_idx]
+                for to_idx, to_loc in enumerate(cnt_names):
+                    destination_pose = cnt_coords[to_idx]
+                    distance_update = get_expected_cost_of_finding(
+                        partial_map, subgoals, obj_name, robot_pose, destination_pose, learned_net)
+                    pddl['problem'] = update_problem(
+                        pddl['problem'], obj_name, from_loc, to_loc, distance_update)
 
     plan, cost = solve_from_pddl(pddl['domain'], pddl['problem'],
                                  planner=pddl['planner'], max_planner_time=300)
