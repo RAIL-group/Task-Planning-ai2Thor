@@ -373,13 +373,20 @@ def get_top_n_frontiers(frontiers, goal_dist, robot_dist, n):
     return fs_collated[0:n]
 
 
-def get_best_expected_cost_and_frontier_list(subgoals, partial_map, robot_pose, num_frontiers_max):
+def get_best_expected_cost_and_frontier_list(
+        subgoals, partial_map, robot_pose, destination, num_frontiers_max):
+
     # Get robot distances
     robot_distances = get_robot_distances(
         partial_map.grid, robot_pose, subgoals)
 
     # Get goal distances
-    goal_distances = {subgoal: robot_distances[subgoal] for subgoal in subgoals}
+    if destination is None:
+        goal_distances = {subgoal: robot_distances[subgoal]
+                          for subgoal in subgoals}
+    else:
+        goal_distances = get_robot_distances(
+            partial_map.grid, destination, subgoals)
 
     # Calculate top n subgoals
     subgoals = get_top_n_frontiers(
