@@ -87,28 +87,44 @@ def get_container_pose(cnt_name, partial_map):
     partial map as input to return the container pose on the grid'''
     if cnt_name in partial_map.idx_map:
         return partial_map.container_poses[partial_map.idx_map[cnt_name]]
+    if cnt_name == 'initial_robot_pose':
+        return None
     raise ValueError('The container could not be located on the grid!')
 
 
 def get_object_to_find_from_plan(plan, partial_map, init_robot_pose):
     '''This function takes in a plan and the partial map as
-    input to return the object index to find; limited to finding
-    single object for now.'''
-    find_from = {}
-    find_at = []
-    robot_poses = [init_robot_pose]
+    input to return the object indices to find, coupled with from
+    where and where to locations'''
+    find_from_to = {}
+    # Robot_poses would be a list of dictionaries in the format
+    # (from, to): 'find/move'
+    robot_poses = []
     for action in plan:
         if action.name == 'move':
-            container_name = action.args[1]
-            container_pose = get_container_pose(container_name, partial_map)
-            robot_poses.append(container_pose)
-        else:
-            robot_poses.append(robot_poses[-1])
-        if action.name == 'find':
+            move_start = action.args[0]
+            ms_pose = get_container_pose(move_start, partial_map)
+            if ms_pose is None:
+                ms_pose = init_robot_pose
+            move_end = action.args[1]
+            me_pose = get_container_pose(move_end, partial_map)
+            if me_pose is None:
+                me_pose = init_robot_pose
+            robot_poses.append({(ms_pose, me_pose): 'move'})
+        elif action.name == 'find':
             obj_name = action.args[0]
+            find_start = action.args[1]
+            fs_pose = get_container_pose(find_start, partial_map)
+            if fs_pose is None:
+                fs_pose = init_robot_pose
+            find_end = action.args[2]
+            fe_pose = get_container_pose(find_end, partial_map)
+            if fe_pose is None:
+                fe_pose = init_robot_pose
             if obj_name in partial_map.idx_map:
                 obj_idx = partial_map.idx_map[obj_name]
-                find_from[obj_idx] = robot_poses[-1]
-            find_at.append(len(robot_poses))
-            # raise ValueError('The object could not be found!')
-    return find_from, find_at, robot_poses
+                find_from_to[obj_idx] = {
+                    'from': fs_pose, 'to': fe_pose}
+            robot_poses.append({(fs_pose, fe_pose): 'find'})
+
+    return find_from_to, robot_poses
