@@ -39,9 +39,14 @@ def evaluate_main(args):
             pddl=pddl, partial_map=partial_map,
             subgoals=pddl['subgoals'], init_robot_pose=init_robot_pose,
             learned_net=args.network_file)
+        cost_str = 'learned'
     else:
         plan, cost = solve_from_pddl(pddl['domain'], pddl['problem'],
                                      planner=pddl['planner'], max_planner_time=300)
+        if args.logfile_name == 'task_naive_logfile.txt':
+            cost_str = 'naive'
+        elif args.logfile_name == 'task_learned_sp_logfile.txt':
+            cost_str = 'learned_sp'
     if plan:
         for p in plan:
             print(p)
@@ -50,31 +55,32 @@ def evaluate_main(args):
         plt.savefig(f'{args.save_dir}/{args.image_filename}', dpi=1200)
         exit()
 
-    find_from, find_at, known_poses = taskplan.utilities.utils.get_object_to_find_from_plan(
+    find, robot_poses = taskplan.utilities.utils.get_object_to_find_from_plan(
         plan=plan, partial_map=partial_map, init_robot_pose=init_robot_pose)
-
-    # pose_action_log = taskplan.utilities.utils.get_pose_action_log(known_poses)
 
     # Intialize logfile
     logfile = os.path.join(args.save_dir, args.logfile_name)
     with open(logfile, "a+") as f:
         f.write(f"LOG: {args.current_seed}\n")
-    if args.logfile_name == 'task_naive_logfile.txt':
-        planner = ClosestActionPlanner(args, partial_map)
-        cost_str = 'naive'
-    elif args.logfile_name == 'task_learned_sp_logfile.txt':
-        planner = LearnedPlanner(args, partial_map, verbose=True)
-        cost_str = 'learned_sp'
-    elif args.logfile_name == 'task_learned_logfile.txt':
-        planner = LearnedPlanner(args, partial_map, verbose=True)
-        cost_str = 'learned'
 
-    search_poses = []
-    for obj_idx in find_from:
+    search_poses = {}
+
+    for obj_idx in find:
+        if args.logfile_name == 'task_naive_logfile.txt':
+            planner = ClosestActionPlanner(args, partial_map,
+                                           destination=find[obj_idx]['to'])
+        elif args.logfile_name == 'task_learned_sp_logfile.txt':
+            planner = LearnedPlanner(args, partial_map, verbose=True,
+                                     destination=find[obj_idx]['to'])
+        elif args.logfile_name == 'task_learned_logfile.txt':
+            planner = LearnedPlanner(args, partial_map, verbose=True,
+                                     destination=find[obj_idx]['to'])
+
         partial_map.target_obj = obj_idx
         planning_loop = taskplan.planners.planning_loop.PlanningLoop(
-            partial_map=partial_map, robot=find_from[obj_idx],
-            args=args, verbose=True, close_loop=True)
+            partial_map=partial_map, robot=find[obj_idx]['from'],
+            destination=find[obj_idx]['to'],
+            args=args, verbose=True)
         # we set the subgoals from pddl initialization
         # however, for each search we reconsider the subgoals to be unexplored
         # by copying; remove copy to continue from same state but in that
@@ -96,16 +102,22 @@ def evaluate_main(args):
             print(f"Time taken to choose subgoal: {time.time() - s_time}")
             planning_loop.set_chosen_subgoal(chosen_subgoal)
 
-        search_poses.append(planning_loop.robot)
+        search_poses[(find[obj_idx]['from'], find[obj_idx]['to'])] = planning_loop.robot
 
     distances = []
     trajectories = []
-    k_dist, k_traj = taskplan.core.compute_path_cost(partial_map.grid, known_poses)
-    distances.append(k_dist)
-    trajectories.append(k_traj)
+    is_find = []
 
-    for sp in search_poses:
-        dist, traj = taskplan.core.compute_path_cost(partial_map.grid, sp)
+    for robot_pose in robot_poses:
+        for rp in robot_pose:
+            action_type = robot_pose[rp]
+        if action_type == 'find':
+            robot_pose = search_poses[rp]
+            is_find.append(True)
+        elif action_type == 'move':
+            robot_pose = [rp[0], rp[1]]
+            is_find.append(False)
+        dist, traj = taskplan.core.compute_path_cost(partial_map.grid, robot_pose)
         distances.append(dist)
         trajectories.append(traj)
 
@@ -117,7 +129,7 @@ def evaluate_main(args):
                 f" | {cost_str}: {dist:0.3f}\n")
 
     plt.clf()
-    plt.figure(figsize=(10, 6))
+    plt.figure(figsize=(12, 6))
     plt.suptitle(f"{pddl['goal']} - seed: [{args.current_seed}]", fontsize=9)
 
     plt.subplot(231)
@@ -162,31 +174,24 @@ def evaluate_main(args):
     plt.yticks(fontsize=5)
 
     reds_cmap = plt.get_cmap('Reds')
-    for traj in trajectories[1:]:
+    viridis_cmap = plt.get_cmap('viridis')
+    for t_idx, traj in enumerate(trajectories):
         colors = np.linspace(0, 1, len(traj[0]))
-        line_colors = reds_cmap(colors)
+        if is_find[t_idx]:
+            line_colors = reds_cmap(colors)
+        else:
+            line_colors = viridis_cmap(colors)
 
         for idx, x in enumerate(traj[0]):
             y = traj[1][idx]
             plt.plot(x, y, color=line_colors[idx], marker='.', markersize=3)
-    # Create a Viridis color map
-    viridis_cmap = plt.get_cmap('viridis')
-
-    # Generate colors based on the Viridis color map
-    colors = np.linspace(0, 1, len(trajectories[0][0]))
-    line_colors = viridis_cmap(colors)
-
-    # Plot the points with Viridis color gradient
-    for idx, x in enumerate(trajectories[0][0]):
-        y = trajectories[0][1][idx]
-        plt.plot(x, y, color=line_colors[idx], marker='.', markersize=3)
 
     plt.savefig(f'{args.save_dir}/{args.image_filename}', dpi=1200)
 
 
 def get_args():
     parser = argparse.ArgumentParser(
-        description="Evaluation for Object Search"
+        description="Evaluation for Task Planning under uncertainty"
     )
     parser.add_argument('--current_seed', type=int, required=True)
     parser.add_argument('--image_filename', type=str, required=True)
