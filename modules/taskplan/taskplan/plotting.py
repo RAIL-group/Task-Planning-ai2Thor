@@ -37,6 +37,11 @@ def make_plotting_grid(grid_map):
     return grid
 
 
+def make_blank_grid(grid_map):
+    grid = np.ones([grid_map.shape[0], grid_map.shape[1], 3])
+    return grid
+
+
 def plot_graph_on_grid(grid, graph):
     '''Plot the scene graph on the occupancy grid to scale'''
     plotting_grid = make_plotting_grid(np.transpose(grid))
