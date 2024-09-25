@@ -147,6 +147,7 @@ def get_domain(whole_graph):
         :parameters (?obj - item ?from - location ?to - location)
         :precondition (and
             ;(not (rob-at initial_robot_pose))
+            (not (restrict-move-to ?to))
             (rob-at ?from)
             (not (is-located ?obj))
             (is-pickable ?obj)
