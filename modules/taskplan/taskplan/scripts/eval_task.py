@@ -107,7 +107,7 @@ def evaluate_main(args):
     distances = []
     trajectories = []
     is_find = []
-
+    t = []
     for robot_pose in robot_poses:
         for rp in robot_pose:
             action_type = robot_pose[rp]
@@ -117,10 +117,12 @@ def evaluate_main(args):
         elif action_type == 'move':
             robot_pose = [rp[0], rp[1]]
             is_find.append(False)
+        t.extend(robot_pose)
         dist, traj = taskplan.core.compute_path_cost(partial_map.grid, robot_pose)
         distances.append(dist)
         trajectories.append(traj)
-
+    total_dist, trajectory = taskplan.core.compute_path_cost(partial_map.grid, t)
+    # assert dist == total_dist
     dist = sum(distances)
     print(f"Planning cost: {dist}")
     with open(logfile, "a+") as f:
@@ -165,7 +167,7 @@ def evaluate_main(args):
 
     plt.subplot(236)
     # 4 plot the grid with trajectory viridis color
-    plotting_grid = taskplan.plotting.make_plotting_grid(
+    plotting_grid = taskplan.plotting.make_blank_grid(
         np.transpose(grid)
     )
     plt.imshow(plotting_grid)
@@ -173,19 +175,19 @@ def evaluate_main(args):
     plt.xticks(fontsize=5)
     plt.yticks(fontsize=5)
 
-    reds_cmap = plt.get_cmap('Reds')
     viridis_cmap = plt.get_cmap('viridis')
-    for t_idx, traj in enumerate(trajectories):
-        colors = np.linspace(0, 1, len(traj[0]))
-        if is_find[t_idx]:
-            line_colors = reds_cmap(colors)
-        else:
-            line_colors = viridis_cmap(colors)
 
-        for idx, x in enumerate(traj[0]):
-            y = traj[1][idx]
-            plt.plot(x, y, color=line_colors[idx], marker='.', markersize=3)
+    colors = np.linspace(0, 1, len(trajectory[0]))
+    line_colors = viridis_cmap(colors)
 
+    for idx, x in enumerate(trajectory[0]):
+        y = trajectory[1][idx]
+        plt.plot(x, y, color=line_colors[idx], marker='.', markersize=3)
+
+    # Hide box and ticks
+    plt.box(False)
+    plt.xticks([])
+    plt.yticks([])
     plt.savefig(f'{args.save_dir}/{args.image_filename}', dpi=1200)
 
 
