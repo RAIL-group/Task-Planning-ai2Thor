@@ -43,6 +43,7 @@ def get_domain(whole_graph):
         (is-dirty ?obj - item)
         (is-folded ?obj - item)
         (is-foldable ?obj - item)
+        (ban-move)
     )
 
     (:functions
@@ -97,6 +98,8 @@ def get_domain(whole_graph):
             (not (is-at ?obj ?loc))
             (is-holding ?obj)
             (not (hand-is-free))
+            (not (ban-move))
+            (increase (total-cost) 500)
         )
     )
 
@@ -111,6 +114,8 @@ def get_domain(whole_graph):
             (is-at ?obj ?loc)
             (not (is-holding ?obj))
             (hand-is-free)
+            (not (ban-move))
+            (increase (total-cost) 500)
         )
     )
 
@@ -119,11 +124,13 @@ def get_domain(whole_graph):
         :precondition (and
             (not (= ?start ?end))
             (not (restrict-move-to ?end))
+            (not (ban-move))
             (rob-at ?start)
         )
         :effect (and
             (not (rob-at ?start))
             (rob-at ?end)
+            (ban-move)
             (increase (total-cost) (known-cost ?start ?end))
         )
     )
@@ -146,7 +153,6 @@ def get_domain(whole_graph):
     (:action find
         :parameters (?obj - item ?from - location ?to - location)
         :precondition (and
-            ;(not (rob-at initial_robot_pose))
             (not (restrict-move-to ?to))
             (rob-at ?from)
             (not (is-located ?obj))
@@ -159,6 +165,7 @@ def get_domain(whole_graph):
             (is-holding ?obj)
             (rob-at ?to)
             (not (rob-at ?from))
+            (not (ban-move))
             (increase (total-cost) (find-cost ?obj ?from ?to))
         )
     )
