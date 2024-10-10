@@ -96,3 +96,11 @@ def set_napkin(location, napkin=None):
 def place_two_objects(locs, objs):
     t_str = f'(and (is-at {objs[0]} {locs[0]}) (is-at {objs[1]} {locs[1]}))'
     return t_str
+
+
+def multiple_goal(goals):
+    t_str = '(or'
+    for goal in goals:
+        t_str += f' {goal}'
+    t_str += ')'
+    return t_str
