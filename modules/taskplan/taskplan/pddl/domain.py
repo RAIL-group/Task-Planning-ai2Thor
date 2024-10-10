@@ -99,7 +99,7 @@ def get_domain(whole_graph):
             (is-holding ?obj)
             (not (hand-is-free))
             (not (ban-move))
-            (increase (total-cost) 500)
+            (increase (total-cost) 100)
         )
     )
 
@@ -115,7 +115,7 @@ def get_domain(whole_graph):
             (not (is-holding ?obj))
             (hand-is-free)
             (not (ban-move))
-            (increase (total-cost) 500)
+            (increase (total-cost) 100)
         )
     )
 
