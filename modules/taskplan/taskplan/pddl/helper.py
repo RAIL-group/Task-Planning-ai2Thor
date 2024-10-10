@@ -1,4 +1,4 @@
-import re
+import random
 from pddlstream.algorithms.search import solve_from_pddl
 
 import taskplan
@@ -166,3 +166,21 @@ def get_learning_informed_plan(pddl, partial_map, subgoals, init_robot_pose, lea
                                  planner=pddl['planner'], max_planner_time=300)
 
     return plan, cost
+
+
+def get_goals(seed, cnt_of_interest, obj_of_interest):
+    random.seed(seed)
+    goal_cnt = random.sample(cnt_of_interest, 2)
+    goal_obj = random.sample(obj_of_interest, 2)
+    task1 = taskplan.pddl.task.place_two_objects(goal_cnt, goal_obj)
+
+    goal_cnt = random.sample(cnt_of_interest, 2)
+    goal_obj = random.sample(obj_of_interest, 2)
+    task2 = taskplan.pddl.task.place_two_objects(goal_cnt, goal_obj)
+
+    goal_cnt = random.sample(cnt_of_interest, 2)
+    goal_obj = random.sample(obj_of_interest, 2)
+    task3 = taskplan.pddl.task.place_two_objects(goal_cnt, goal_obj)
+    task = [task3, task2, task1]
+    task = taskplan.pddl.task.multiple_goal(task)
+    return task
