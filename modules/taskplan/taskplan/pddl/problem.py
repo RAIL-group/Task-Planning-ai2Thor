@@ -1,7 +1,4 @@
-import random
-
-import taskplan
-from taskplan.pddl.helper import generate_pddl_problem
+from taskplan.pddl.helper import generate_pddl_problem, get_goals
 from taskplan.utilities.ai2thor_helper import get_generic_name
 
 
@@ -102,10 +99,7 @@ def get_problem(map_data, unvisited, seed=0):
                 f"(= (known-cost {c1} {c2}) {val})"
             )
 
-    random.seed(seed)
-    goal_cnt = random.sample(cnt_of_interest, 2)
-    goal_obj = random.sample(obj_of_interest, 2)
-    task = taskplan.pddl.task.place_two_objects(goal_cnt, goal_obj)
+    task = get_goals(seed, cnt_of_interest, obj_of_interest)
     print(f'Goal: {task}')
     goal = [task]
     PROBLEM_PDDL = generate_pddl_problem(
