@@ -184,3 +184,52 @@ def get_goals(seed, cnt_of_interest, obj_of_interest):
     task = [task3, task2, task1]
     task = taskplan.pddl.task.multiple_goal(task)
     return task
+
+
+def update_problem_move(problem, end):
+    x = '(rob-at '
+    lines = problem.splitlines()
+    for line_idx, line in enumerate(lines):
+        if x in line:
+            line = '        ' + x + f'{end})'
+            lines[line_idx] = line
+    updated_pddl_problem = '\n'.join(lines)
+    return updated_pddl_problem
+
+
+def update_problem_pick(problem, obj, loc):
+    x = f'        (is-holding {obj})'
+    y = '(hand-is-free)'
+    z = f'(is-at {obj} {loc})'
+    lines = problem.splitlines()
+    for line_idx, line in enumerate(lines):
+        if y in line:
+            line = '        ' + f'(not {y})'
+            lines[line_idx] = line
+        elif z in line:
+            line = '        ' + f'(not {z})'
+            lines[line_idx] = line
+            insert_x = line_idx + 1
+    lines.insert(insert_x, x)
+    updated_pddl_problem = '\n'.join(lines)
+    return updated_pddl_problem
+
+
+def update_problem_place(problem, obj, loc):
+    x = '(not (hand-is-free))'
+    y = f'(not (is-at {obj} '
+    z = f'(is-holding {obj})'
+    lines = problem.splitlines()
+    for line_idx, line in enumerate(lines):
+        if x in line:
+            line = '        ' + '(hand-is-free)'
+            lines[line_idx] = line
+        elif y in line:
+            line = '        ' + f'(is-at {obj} {loc}'
+            lines[line_idx] = line
+        elif z in line:
+            line = '        ' + f'(not {z})'
+            delete_z = line_idx
+    del lines[delete_z]
+    updated_pddl_problem = '\n'.join(lines)
+    return updated_pddl_problem
