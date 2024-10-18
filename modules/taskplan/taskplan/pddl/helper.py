@@ -225,11 +225,26 @@ def update_problem_place(problem, obj, loc):
             line = '        ' + '(hand-is-free)'
             lines[line_idx] = line
         elif y in line:
-            line = '        ' + f'(is-at {obj} {loc}'
+            line = '        ' + f'(is-at {obj} {loc})'
             lines[line_idx] = line
         elif z in line:
             line = '        ' + f'(not {z})'
             delete_z = line_idx
     del lines[delete_z]
+    updated_pddl_problem = '\n'.join(lines)
+    return updated_pddl_problem
+
+
+def update_problem_find(problem, obj, loc):
+    y = f'(not (is-located {obj}))'
+    z = f'        (is-at {obj} {loc})'
+    lines = problem.splitlines()
+    for line_idx, line in enumerate(lines):
+        if y in line:
+            line = f'        (is-located {obj})'
+            lines[line_idx] = line
+            insert_z = line_idx + 1
+    if insert_z:
+        lines.insert(insert_z, z)
     updated_pddl_problem = '\n'.join(lines)
     return updated_pddl_problem
