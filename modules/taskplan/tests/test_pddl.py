@@ -114,69 +114,137 @@ def test_replan():
     )
 
     plan, cost = solve_from_pddl(pddl['domain'], pddl['problem'], planner=pddl['planner'])
-    if plan:
-        for p in plan:
-            print(p)
-        print(cost)
+    executed_actions = []
 
-    for action in plan[:4]:
-        if action.name == 'move':
-            move_start = action.args[0]
-            ms_pose = get_container_pose(move_start, partial_map)
-            if ms_pose is None:
-                ms_pose = init_robot_pose
-            move_end = action.args[1]
-            me_pose = get_container_pose(move_end, partial_map)
-            if me_pose is None:
-                me_pose = init_robot_pose
+    while plan:
+        for action in plan:
+            executed_actions.append(action)
+            if action.name == 'move':
+                move_start = action.args[0]
+                ms_pose = get_container_pose(move_start, partial_map)
+                if ms_pose is None:
+                    ms_pose = init_robot_pose
+                move_end = action.args[1]
+                me_pose = get_container_pose(move_end, partial_map)
+                if me_pose is None:
+                    me_pose = init_robot_pose
 
-            # Update problem for move action.
-            # (rob-at move_end)
-            pddl['problem'] = taskplan.pddl.helper.update_problem_move(
-                pddl['problem'], move_end)
-            # robot_poses.append({(ms_pose, me_pose): 'move'})
-        elif action.name == 'pick':
-            object_name = action.args[0]
-            pick_at = action.args[1]
-            pick_pose = get_container_pose(pick_at, partial_map)
-            if pick_pose is None:
-                pick_pose = init_robot_pose
-            # Update problem for pick action.
-            # (not (hand-is-free))
-            # (not (is-at object location))
-            # (is holding object)
-            pddl['problem'] = taskplan.pddl.helper.update_problem_pick(
-                pddl['problem'], object_name, pick_at)
-        elif action.name == 'place':
-            object_name = action.args[0]
-            place_at = action.args[1]
-            place_pose = get_container_pose(place_at, partial_map)
-            if place_pose is None:
-                place_pose = init_robot_pose
-            # Update problem for place action.
-            # (hand-is-free)
-            # (is-at object location)
-            # (not (is holding object))
-            pddl['problem'] = taskplan.pddl.helper.update_problem_place(
-                pddl['problem'], object_name, place_at)
-        elif action.name == 'find':
-            obj_name = action.args[0]
-            find_start = action.args[1]
-            fs_pose = get_container_pose(find_start, partial_map)
-            if fs_pose is None:
-                fs_pose = init_robot_pose
-            find_end = action.args[2]
-            fe_pose = get_container_pose(find_end, partial_map)
-            if fe_pose is None:
-                fe_pose = init_robot_pose
-    with open("/data/test_logs/problem.txt", "w") as file:
-        file.write(pddl['problem'])
+                # Update problem for move action.
+                # (rob-at move_end)
+                pddl['problem'] = taskplan.pddl.helper.update_problem_move(
+                    pddl['problem'], move_end)
+                # Finally replan
+                plan, cost = solve_from_pddl(pddl['domain'], pddl['problem'], planner=pddl['planner'])
+                break
+            elif action.name == 'pick':
+                object_name = action.args[0]
+                pick_at = action.args[1]
+                pick_pose = get_container_pose(pick_at, partial_map)
+                if pick_pose is None:
+                    pick_pose = init_robot_pose
+                # Update problem for pick action.
+                # (not (hand-is-free))
+                # (not (is-at object location))
+                # (is holding object)
+                pddl['problem'] = taskplan.pddl.helper.update_problem_pick(
+                    pddl['problem'], object_name, pick_at)
+                # Finally replan
+                plan, cost = solve_from_pddl(pddl['domain'], pddl['problem'], planner=pddl['planner'])
+                break
+            elif action.name == 'place':
+                object_name = action.args[0]
+                place_at = action.args[1]
+                place_pose = get_container_pose(place_at, partial_map)
+                if place_pose is None:
+                    place_pose = init_robot_pose
+                # Update problem for place action.
+                # (hand-is-free)
+                # (is-at object location)
+                # (not (is holding object))
+                pddl['problem'] = taskplan.pddl.helper.update_problem_place(
+                    pddl['problem'], object_name, place_at)
+                # Finally replan
+                plan, cost = solve_from_pddl(pddl['domain'], pddl['problem'], planner=pddl['planner'])
+                break
+            elif action.name == 'find':
+                obj_name = action.args[0]
+                obj_idx = partial_map.idx_map[obj_name]
+                find_start = action.args[1]
+                fs_pose = get_container_pose(find_start, partial_map)
+                if fs_pose is None:
+                    fs_pose = init_robot_pose
+                find_end = action.args[2]
+                fe_pose = get_container_pose(find_end, partial_map)
+                if fe_pose is None:
+                    fe_pose = init_robot_pose
 
-    # execute the first action from the plan
-        # if the action is find (only run the subroutine for a step to reveal an unseen location)
-    # save the state of the world
-    # get new problem file from the updated state of the world
-    # replan, until (no actions are in the plan, either of the goals have been reached)
+                # Initialize the partial map
+                partial_map.target_obj = obj_idx
+                # Over here initiate the planner
+                planner = ClosestActionPlanner(args, partial_map,
+                                               destination=fe_pose)
+                # Initiate planning loop but run for a step
+                planning_loop = taskplan.planners.planning_loop.PlanningLoop(
+                    partial_map=partial_map, robot=fs_pose,
+                    destination=fe_pose, args=args, verbose=True)
+
+                planning_loop.subgoals = pddl['subgoals'].copy()
+                explored_loc = None
+
+                for counter, step_data in enumerate(planning_loop):
+                    # Update the planner objects
+                    s_time = time.time()
+                    planner.update(
+                        step_data['graph'],
+                        step_data['subgoals'],
+                        step_data['robot_pose'])
+                    print(f"Time taken to update: {time.time() - s_time}")
+
+                    # Compute the next subgoal and set to the planning loop
+                    s_time = time.time()
+                    chosen_subgoal = planner.compute_selected_subgoal()
+                    print(f"Time taken to choose subgoal: {time.time() - s_time}")
+                    planning_loop.set_chosen_subgoal(chosen_subgoal)
+
+                    explored_loc = chosen_subgoal.value
+                    pddl['subgoals'].remove(chosen_subgoal.value)
+                    break  # Run the loop only exploring one containers
+
+                # Get which container was chosen to explore
+                # Get the objects that are connected to that container
+                idx2assetID = {partial_map.idx_map[assetID]: assetID for assetID in partial_map.idx_map}
+
+                connection_idx = [
+                    idx
+                    for idx, value in enumerate(partial_map.org_edge_index[0])
+                    if value == explored_loc
+                ]
+                found_objects = [
+                    idx2assetID[con_idx]
+                    for con_idx in connection_idx
+                ]
+                found_at = idx2assetID[explored_loc]
+
+                # Update problem for find action.
+                # (rob-at {found_at})
+                # For all found_objs (is-located obj)
+                #                   (is-at obj found_at)
+                # add all the contents of that container in the known space [set as located and where]
+                pddl['problem'] = taskplan.pddl.helper.update_problem_move(
+                        pddl['problem'], found_at)
+                for obj in found_objects:
+                    pddl['problem'] = taskplan.pddl.helper.update_problem_find(
+                        pddl['problem'], obj, found_at)
+
+                # Finally replan
+                print('Replanning .. .. ..')
+                plan, cost = solve_from_pddl(pddl['domain'], pddl['problem'], planner=pddl['planner'])
+                break
+
+    print('\nThe final plan as executed:')
+    for action in executed_actions:
+        print(action)
+
     plt.imshow(whole_graph['graph_image'])
     plt.savefig(f'/data/test_logs/graph_{args.current_seed}.png', dpi=400)
     raise NotImplementedError
