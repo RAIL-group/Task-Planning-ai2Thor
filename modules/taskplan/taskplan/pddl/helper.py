@@ -199,6 +199,7 @@ def update_problem_move(problem, end):
 
 def update_problem_pick(problem, obj, loc):
     x = f'        (is-holding {obj})'
+    insert_x = None
     y = '(hand-is-free)'
     z = f'(is-at {obj} {loc})'
     lines = problem.splitlines()
@@ -210,7 +211,8 @@ def update_problem_pick(problem, obj, loc):
             line = '        ' + f'(not {z})'
             lines[line_idx] = line
             insert_x = line_idx + 1
-    lines.insert(insert_x, x)
+    if insert_x:
+        lines.insert(insert_x, x)
     updated_pddl_problem = '\n'.join(lines)
     return updated_pddl_problem
 
@@ -219,6 +221,7 @@ def update_problem_place(problem, obj, loc):
     x = '(not (hand-is-free))'
     y = f'(not (is-at {obj} '
     z = f'(is-holding {obj})'
+    delete_z = None
     lines = problem.splitlines()
     for line_idx, line in enumerate(lines):
         if x in line:
@@ -230,7 +233,8 @@ def update_problem_place(problem, obj, loc):
         elif z in line:
             line = '        ' + f'(not {z})'
             delete_z = line_idx
-    del lines[delete_z]
+    if delete_z:
+        del lines[delete_z]
     updated_pddl_problem = '\n'.join(lines)
     return updated_pddl_problem
 
@@ -238,6 +242,7 @@ def update_problem_place(problem, obj, loc):
 def update_problem_find(problem, obj, loc):
     y = f'(not (is-located {obj}))'
     z = f'        (is-at {obj} {loc})'
+    insert_z = None
     lines = problem.splitlines()
     for line_idx, line in enumerate(lines):
         if y in line:
