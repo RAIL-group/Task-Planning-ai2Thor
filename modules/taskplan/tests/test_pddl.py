@@ -115,6 +115,7 @@ def test_replan():
 
     plan, cost = solve_from_pddl(pddl['domain'], pddl['problem'], planner=pddl['planner'])
     executed_actions = []
+    robot_poses = [init_robot_pose]
 
     while plan:
         for action in plan:
@@ -131,6 +132,7 @@ def test_replan():
 
                 # Update problem for move action.
                 # (rob-at move_end)
+                robot_poses.append(me_pose)
                 pddl['problem'] = taskplan.pddl.helper.update_problem_move(
                     pddl['problem'], move_end)
                 # Finally replan
@@ -183,6 +185,7 @@ def test_replan():
                 # Over here initiate the planner
                 planner = ClosestActionPlanner(args, partial_map,
                                                destination=fe_pose)
+                cost_str = 'Naive'
                 # Initiate planning loop but run for a step
                 planning_loop = taskplan.planners.planning_loop.PlanningLoop(
                     partial_map=partial_map, robot=fs_pose,
@@ -230,6 +233,7 @@ def test_replan():
                 # For all found_objs (is-located obj)
                 #                   (is-at obj found_at)
                 # add all the contents of that container in the known space [set as located and where]
+                robot_poses.append(partial_map.container_poses[explored_loc])
                 pddl['problem'] = taskplan.pddl.helper.update_problem_move(
                         pddl['problem'], found_at)
                 for obj in found_objects:
@@ -245,6 +249,57 @@ def test_replan():
     for action in executed_actions:
         print(action)
 
+    distance, trajectory = taskplan.core.compute_path_cost(partial_map.grid, robot_poses)
+    print(f"Planning cost: {distance}")
+
+    plt.clf()
+    plt.figure(figsize=(12, 6))
+    plt.suptitle(f"{pddl['goal']} - seed: [{args.current_seed}]", fontsize=6)
+
+    # 1 plot the plan
+    plt.subplot(221)
+    taskplan.plotting.plot_plan(plan=executed_actions)
+
+    # 2 plot the whole graph
+    plt.subplot(222)
+    plt.title('Whole scene graph', fontsize=6)
     plt.imshow(whole_graph['graph_image'])
-    plt.savefig(f'/data/test_logs/graph_{args.current_seed}.png', dpi=400)
+    plt.box(False)
+    # Hide x and y ticks
+    plt.xticks([])
+    plt.yticks([])
+
+    plt.subplot(223)
+    # 3 plot the top-dwon-view
+    top_down_frame = thor_data.get_top_down_frame()
+    plt.imshow(top_down_frame)
+    plt.title('Top-down view of the map', fontsize=6)
+    plt.xticks(fontsize=5)
+    plt.yticks(fontsize=5)
+
+    plt.subplot(224)
+    # 4 plot the grid with trajectory viridis color
+    plotting_grid = taskplan.plotting.make_blank_grid(
+        np.transpose(grid)
+    )
+    plt.imshow(plotting_grid)
+    plt.title(f"{cost_str} Cost: {distance:0.3f}", fontsize=6)
+    plt.xticks(fontsize=5)
+    plt.yticks(fontsize=5)
+
+    viridis_cmap = plt.get_cmap('viridis')
+
+    colors = np.linspace(0, 1, len(trajectory[0]))
+    line_colors = viridis_cmap(colors)
+
+    for idx, x in enumerate(trajectory[0]):
+        y = trajectory[1][idx]
+        plt.plot(x, y, color=line_colors[idx], marker='.', markersize=3)
+
+    # Hide box and ticks
+    plt.box(False)
+    plt.xticks([])
+    plt.yticks([])
+
+    plt.savefig(f'/data/test_logs/replan_{args.current_seed}.png', dpi=400)
     raise NotImplementedError
