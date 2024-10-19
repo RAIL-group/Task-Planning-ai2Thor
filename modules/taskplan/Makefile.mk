@@ -81,7 +81,7 @@ $(eval-task-seeds-naive):
 	@echo "Evaluating Data [$(BASENAME) | seed: $(seed) | Naive"]
 	@mkdir -p $(DATA_BASE_DIR)/$(BASENAME)/results/$(EXPERIMENT_NAME)
 	@$(call xhost_activate)
-	@$(DOCKER_PYTHON) -m taskplan.scripts.eval_task \
+	@$(DOCKER_PYTHON) -m taskplan.scripts.eval_replan \
 		$(CORE_ARGS) \
 		--save_dir /data/$(BASENAME)/results/$(EXPERIMENT_NAME) \
 	 	--current_seed $(seed) \
@@ -140,7 +140,7 @@ $(eval-task-seeds-learned-sp):
 	@echo "Evaluating Data [$(BASENAME) | seed: $(seed) | Learned Search Policy"]
 	@mkdir -p $(DATA_BASE_DIR)/$(BASENAME)/results/$(EXPERIMENT_NAME)
 	@$(call xhost_activate)
-	@$(DOCKER_PYTHON) -m taskplan.scripts.eval_task \
+	@$(DOCKER_PYTHON) -m taskplan.scripts.eval_replan \
 		$(CORE_ARGS) \
 		--save_dir /data/$(BASENAME)/results/$(EXPERIMENT_NAME) \
 	 	--current_seed $(seed) \
@@ -161,7 +161,7 @@ $(eval-task-seeds-learned):
 	@echo "Evaluating Data [$(BASENAME) | seed: $(seed) | Learned Search Policy + Expected Cost"]
 	@mkdir -p $(DATA_BASE_DIR)/$(BASENAME)/results/$(EXPERIMENT_NAME)
 	@$(call xhost_activate)
-	@$(DOCKER_PYTHON) -m taskplan.scripts.eval_task \
+	@$(DOCKER_PYTHON) -m taskplan.scripts.eval_replan \
 		$(CORE_ARGS) \
 		--save_dir /data/$(BASENAME)/results/$(EXPERIMENT_NAME) \
 	 	--current_seed $(seed) \
