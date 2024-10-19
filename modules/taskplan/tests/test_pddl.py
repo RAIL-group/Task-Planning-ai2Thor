@@ -13,7 +13,7 @@ from taskplan.utilities.utils import get_container_pose
 
 def get_args():
     args = lambda: None
-    args.current_seed = 7000
+    args.current_seed = 7001
     args.resolution = 0.05
     args.save_dir = '/data/test_logs/'
     args.image_filename = 'tester.png'
@@ -218,7 +218,7 @@ def test_replan():
                 idx2assetID = {partial_map.idx_map[assetID]: assetID for assetID in partial_map.idx_map}
 
                 connection_idx = [
-                    idx
+                    partial_map.org_edge_index[1][idx]
                     for idx, value in enumerate(partial_map.org_edge_index[0])
                     if value == explored_loc
                 ]
