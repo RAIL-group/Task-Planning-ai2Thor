@@ -63,7 +63,10 @@ def evaluate_main(args):
         f.write(f"LOG: {args.current_seed}\n")
 
     while plan:
-        for action in plan:
+        for action_idx, action in enumerate(plan):
+            # Break loop at the end of plan
+            if action_idx == len(plan) - 1:
+                plan = []
             executed_actions.append(action)
             if action.name == 'move':
                 move_start = action.args[0]
@@ -80,9 +83,6 @@ def evaluate_main(args):
                 robot_poses.append(me_pose)
                 pddl['problem'] = taskplan.pddl.helper.update_problem_move(
                     pddl['problem'], move_end)
-                # Finally replan
-                plan, cost = solve_from_pddl(pddl['domain'], pddl['problem'], planner=pddl['planner'])
-                break
             elif action.name == 'pick':
                 object_name = action.args[0]
                 pick_at = action.args[1]
@@ -95,9 +95,6 @@ def evaluate_main(args):
                 # (is holding object)
                 pddl['problem'] = taskplan.pddl.helper.update_problem_pick(
                     pddl['problem'], object_name, pick_at)
-                # Finally replan
-                plan, cost = solve_from_pddl(pddl['domain'], pddl['problem'], planner=pddl['planner'])
-                break
             elif action.name == 'place':
                 object_name = action.args[0]
                 place_at = action.args[1]
@@ -110,9 +107,6 @@ def evaluate_main(args):
                 # (not (is holding object))
                 pddl['problem'] = taskplan.pddl.helper.update_problem_place(
                     pddl['problem'], object_name, place_at)
-                # Finally replan
-                plan, cost = solve_from_pddl(pddl['domain'], pddl['problem'], planner=pddl['planner'])
-                break
             elif action.name == 'find':
                 obj_name = action.args[0]
                 obj_idx = partial_map.idx_map[obj_name]
@@ -192,10 +186,6 @@ def evaluate_main(args):
                 print('Replanning .. .. ..')
                 plan, cost = solve_from_pddl(pddl['domain'], pddl['problem'], planner=pddl['planner'])
                 break
-
-    # print('\nThe final plan as executed:')
-    # for action in executed_actions:
-    #     print(action)
 
     distance, trajectory = taskplan.core.compute_path_cost(partial_map.grid, robot_poses)
     print(f"Planning cost: {distance}")
