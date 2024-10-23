@@ -9,7 +9,7 @@ from pddlstream.algorithms.search import solve_from_pddl
 
 import taskplan
 from taskplan.planners.planner import ClosestActionPlanner, LearnedPlanner
-from taskplan.pddl.helper import get_learning_informed_plan
+from taskplan.pddl.helper import get_learning_informed_pddl
 from taskplan.utilities.utils import get_container_pose
 
 
@@ -38,23 +38,24 @@ def evaluate_main(args):
     )
 
     if args.logfile_name == 'task_learned_logfile.txt':
-        plan, cost = get_learning_informed_plan(
+        pddl = get_learning_informed_pddl(
             pddl=pddl, partial_map=partial_map,
             subgoals=pddl['subgoals'], init_robot_pose=init_robot_pose,
             learned_net=args.network_file)
         cost_str = 'learned'
     else:
-        plan, cost = solve_from_pddl(pddl['domain'], pddl['problem'],
-                                     planner=pddl['planner'], max_planner_time=300)
         if args.logfile_name == 'task_naive_logfile.txt':
             cost_str = 'naive'
         elif args.logfile_name == 'task_learned_sp_logfile.txt':
             cost_str = 'learned_sp'
+
+    plan, cost = solve_from_pddl(pddl['domain'], pddl['problem'],
+                                planner=pddl['planner'], max_planner_time=300)
     executed_actions = []
     robot_poses = [init_robot_pose]
 
     if not plan:
-        plt.savefig(f'{args.save_dir}/{args.image_filename}', dpi=1200)
+        plt.savefig(f'{args.save_dir}/{args.image_filename}', dpi=100)
         exit()
 
     # Intialize logfile
