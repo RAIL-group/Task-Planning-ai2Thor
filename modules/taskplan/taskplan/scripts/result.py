@@ -60,11 +60,9 @@ def process_learned_sp_data(args):
 def process_data(args):
     """Preprocessing function for all planner"""
     learned_data = process_learned_data(args)
-    print(learned_data.describe())
     temp = args.data_file
     args.data_file = args.data_file2
     naive_data = process_naive_data(args)
-    print(naive_data.describe())
     args.data_file = temp
     return naive_data, learned_data
 
