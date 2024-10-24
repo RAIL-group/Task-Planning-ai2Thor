@@ -59,19 +59,14 @@ def process_learned_sp_data(args):
 
 def process_data(args):
     """Preprocessing function for all planner"""
-    data = []
-
-    for line in open(args.data_file).readlines():
-        d = re.match(r'.*?s: (.*?) . naive: (.*?) . learned: (.*?)\n', line)
-        if d is None:
-            continue
-        d = d.groups()
-        data.append([int(d[0]), float(d[1]), float(d[2]), float(d[3])])
-
-    return pd.DataFrame(
-        data,
-        columns=['seed', 'Naive Cost', 'Learned Cost']
-    )
+    learned_data = process_learned_data(args)
+    print(learned_data.describe())
+    temp = args.data_file
+    args.data_file = args.data_file2
+    naive_data = process_naive_data(args)
+    print(naive_data.describe())
+    args.data_file = temp
+    return naive_data, learned_data
 
 
 def gjs_scatter_plot(ax, cost_x, cost_y, max_val, fail_val):
@@ -91,6 +86,9 @@ def gjs_scatter_plot(ax, cost_x, cost_y, max_val, fail_val):
     ax.set_ylim(0, max_val)
     # draw a center line
     ax.plot([0, max_val], [0, max_val], color='black', linestyle='--', linewidth=0.5, alpha=0.2)
+    # Change tick text size for both x and y axes
+    ax.tick_params(axis='x', labelsize=8)  # Set x-axis tick size
+    ax.tick_params(axis='y', labelsize=8)  # Set y-axis tick size
 
     # Plot the failed seeds
     y_fail_seed = set.difference(set(cost_x.keys()), set(cost_y.keys()))
@@ -141,15 +139,11 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description='Generate a figure (and write to file) for results from the interpretability project.',
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('--data_file',
-                        type=str,
-                        required=False,
-                        default=None)
-    parser.add_argument('--output_image_file',
-                        type=str,
-                        required=False,
-                        default=None)
-    parser.add_argument('--output_file2', type=str,
+    parser.add_argument('--data_file', type=str,
+                        required=False, default=None)
+    parser.add_argument('--data_file2', type=str,
+                        required=False, default=None)
+    parser.add_argument('--output_image_file', type=str,
                         required=False, default=None)
     parser.add_argument('--learned', action='store_true')
     parser.add_argument('--naive', action='store_true')
@@ -166,15 +160,12 @@ if __name__ == "__main__":
         data = process_learned_sp_data(args)
         print(data.describe())
     else:
-        data = process_data(args)
-        print(data.describe())
-        result_dict = data.set_index('seed').T.to_dict()
+        naive_data, learned_data = process_data(args)
+        naive_result_dict = naive_data.set_index('seed').T.to_dict()
+        learned_result_dict = learned_data.set_index('seed').T.to_dict()
 
-        Known_dict = {k: result_dict[k]['Known Cost'] for k in result_dict}
-        Naive_dict = {k: result_dict[k]['Naive Cost'] for k in result_dict}
-        Learned_dict = {k: result_dict[k]['Learned Cost'] for k in result_dict}
-        make_scatter_with_box(Known_dict, Learned_dict)
-        plt.savefig(args.output_image_file, dpi=600)
+        Naive_dict = {k: naive_result_dict[k]['NAIVE_LSP'] for k in naive_result_dict}
+        Learned_dict = {k: learned_result_dict[k]['LEARNED_LSP'] for k in learned_result_dict}
         plt.clf()
         make_scatter_with_box(Naive_dict, Learned_dict)
-        plt.savefig(args.output_file2, dpi=600)
+        plt.savefig(args.output_image_file, dpi=600)
