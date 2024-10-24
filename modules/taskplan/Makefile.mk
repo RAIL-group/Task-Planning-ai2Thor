@@ -235,4 +235,12 @@ result-naive:
 	@$(DOCKER_PYTHON) -m taskplan.scripts.result \
 		--data_file /data/$(BASENAME)/results/$(EXPERIMENT_NAME)/task_naive_logfile.txt \
 		--naive
+
+
+.PHONY: result-learned-vs-naive
+result-learned-vs-naive:
+	@$(DOCKER_PYTHON) -m taskplan.scripts.result \
+		--data_file /data/$(BASENAME)/results/$(EXPERIMENT_NAME)/task_learned_logfile.txt \
+		--data_file2 /data/$(BASENAME)/results/$(EXPERIMENT_NAME)/task_naive_logfile.txt \
+		--output_image_file /data//$(BASENAME)/results/results_$(EXPERIMENT_NAME)_scatter.png
 #############################
