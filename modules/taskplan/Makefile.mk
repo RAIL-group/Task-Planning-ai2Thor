@@ -243,4 +243,12 @@ result-learned-vs-naive:
 		--data_file /data/$(BASENAME)/results/$(EXPERIMENT_NAME)/task_learned_logfile.txt \
 		--data_file2 /data/$(BASENAME)/results/$(EXPERIMENT_NAME)/task_naive_logfile.txt \
 		--output_image_file /data//$(BASENAME)/results/results_$(EXPERIMENT_NAME)_scatter.png
+
+.PHONY: result-learned-vs-lsp
+result-learned-vs-lsp:
+	@$(DOCKER_PYTHON) -m taskplan.scripts.result \
+		--data_file /data/$(BASENAME)/results/$(EXPERIMENT_NAME)/task_learned_logfile.txt \
+		--data_file2 /data/$(BASENAME)/results/$(EXPERIMENT_NAME)/task_learned_sp_logfile.txt \
+		--output_image_file /data//$(BASENAME)/results/results_$(EXPERIMENT_NAME)_scatter_2.png \
+		--scatter2
 #############################
