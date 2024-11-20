@@ -1,3 +1,4 @@
+import os
 import time
 import torch
 import random
@@ -303,3 +304,32 @@ def test_replan():
 
     plt.savefig(f'/data/test_logs/replan_{args.current_seed}.png', dpi=400)
     raise NotImplementedError
+
+
+def test_map_details():
+    args = get_args()
+    data_base_path = '/data/test_logs/map_info'
+    if not os.path.exists(data_base_path):
+        os.makedirs(data_base_path)
+
+    for seed in range(8000, 8100):
+        args.current_seed = seed
+        file_name = f'{data_base_path}/map_info_{args.current_seed}.txt'
+
+        # Load data for a given seed
+        thor_data = taskplan.utilities.ai2thor_helper. \
+            ThorInterface(args=args)
+
+        top_down_frame = thor_data.get_top_down_frame()
+        plt.imshow(top_down_frame)
+        plt.title('Top-down view of the map', fontsize=6)
+        plt.xticks(fontsize=5)
+        plt.yticks(fontsize=5)
+        plt.savefig(f'{data_base_path}/top_down_{args.current_seed}.png', dpi=400)
+
+        with open(file_name, "w+") as file:
+            for cnt in thor_data.containers:
+                cnt_id = cnt['id']
+                connected_objects = cnt.get('children')
+                children = [obj['id'] for obj in connected_objects] if connected_objects else []
+                file.write(f"{cnt_id}: {children}\n")
