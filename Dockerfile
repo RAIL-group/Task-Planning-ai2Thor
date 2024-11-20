@@ -52,7 +52,6 @@ ENV PYTHONPATH="/pddlstream:${PYTHONPATH}"
 COPY modules/conftest.py modules/conftest.py
 COPY modules/setup.cfg modules/setup.cfg
 
-COPY ai2thor /root/.ai2thor
 COPY modules/gridmap modules/gridmap
 RUN pip3 install modules/gridmap
 COPY modules/lsp_accel modules/lsp_accel
