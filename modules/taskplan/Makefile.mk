@@ -210,11 +210,18 @@ download-sbert:
 	@$(DOCKER_PYTHON) -m taskplan.scripts.download \
 		--save_dir /data/sentence_transformers
 
+# ai2thor download target
+.PHONY: download-ai2thor
+download-ai2thor:
+	@mkdir -p $(RESOURCES_BASE_DIR)/ai2thor/
+	@$(DOCKER_PYTHON) -m taskplan.scripts.download_ai2thor
+
 # Combined download target
 .PHONY: download
 download:
 	$(MAKE) download-procthor-10k
 	$(MAKE) download-sbert
+	$(MAKE) download-ai2thor
 ################################################
 
 # Results processing targets
