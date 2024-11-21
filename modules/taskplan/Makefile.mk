@@ -251,3 +251,24 @@ result-learned-vs-naive:
 		--data_file2 /data/$(BASENAME)/results/$(EXPERIMENT_NAME)/task_naive_logfile.txt \
 		--output_image_file /data//$(BASENAME)/results/results_$(EXPERIMENT_NAME)_scatter.png
 #############################
+
+NUM_INFO_SEEDS ?= 100
+
+# Target for map info generation
+map-info-seeds = \
+	$(shell for ii in $$(seq 8000 $$((8000 + $(NUM_INFO_SEEDS) - 1))); \
+		do echo "$(DATA_BASE_DIR)/test_logs/map_info/top_down_$${ii}.png"; done)
+$(map-info-seeds): seed = $(shell echo $@ | grep -Eo '[0-9]+' | tail -1)
+$(map-info-seeds):
+	@echo "Generating [taskplan | seed: $(seed) | map information"]
+	@mkdir -p $(DATA_BASE_DIR)/test_logs/map_info
+	@$(call xhost_activate)
+	@$(DOCKER_PYTHON) -m taskplan.scripts.gen_map_info \
+		$(CORE_ARGS) \
+		--save_dir /data/test_logs/map_info \
+	 	--current_seed $(seed) \
+	 	--image_filename top_down_$(seed).png \
+	 	--info_filename map_info_$(seed).txt
+
+.PHONY: gen-map-info
+gen-map-info: $(map-info-seeds)
