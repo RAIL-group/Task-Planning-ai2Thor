@@ -62,9 +62,12 @@ def process_data(args):
     learned_data = process_learned_data(args)
     temp = args.data_file
     args.data_file = args.data_file2
-    naive_data = process_naive_data(args)
+    if args.scatter2:
+        other_data = process_learned_sp_data(args)
+    else:
+        other_data = process_naive_data(args)
     args.data_file = temp
-    return naive_data, learned_data
+    return other_data, learned_data
 
 
 def gjs_scatter_plot(ax, cost_x, cost_y, max_val, fail_val):
@@ -146,6 +149,7 @@ if __name__ == "__main__":
     parser.add_argument('--learned', action='store_true')
     parser.add_argument('--naive', action='store_true')
     parser.add_argument('--learned_sp', action='store_true')
+    parser.add_argument('--scatter2', action='store_true')
     args = parser.parse_args()
 
     if args.learned:
@@ -158,12 +162,12 @@ if __name__ == "__main__":
         data = process_learned_sp_data(args)
         print(data.describe())
     else:
-        naive_data, learned_data = process_data(args)
-        naive_result_dict = naive_data.set_index('seed').T.to_dict()
+        other_data, learned_data = process_data(args)
+        other_result_dict = other_data.set_index('seed').T.to_dict()
         learned_result_dict = learned_data.set_index('seed').T.to_dict()
-
-        Naive_dict = {k: naive_result_dict[k]['NAIVE_LSP'] for k in naive_result_dict}
+        look_up_str = 'LEARNED_SP' if args.scatter2 else 'NAIVE_LSP'
         Learned_dict = {k: learned_result_dict[k]['LEARNED_LSP'] for k in learned_result_dict}
+        Other_dict = {k: other_result_dict[k][look_up_str] for k in other_result_dict}
         plt.clf()
-        make_scatter_with_box(Naive_dict, Learned_dict)
+        make_scatter_with_box(Other_dict, Learned_dict)
         plt.savefig(args.output_image_file, dpi=600)
