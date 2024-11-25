@@ -33,6 +33,19 @@ class ThorInterface:
 
         self.containers = self.scene['objects']
         if preprocess:
+            # prevent adding objects if a container of that type already exists
+            container_types = set()
+            for container in self.containers:
+                container_types.add(container['id'].split('|')[0].lower())
+            for container in self.containers:
+                filtered_children = []
+                if 'children' in container:
+                    for child in container['children']:
+                        if child['id'].split('|')[0].lower() in container_types:
+                            continue
+                        filtered_children.append(child)
+                    container['children'] = filtered_children
+            # filter containers from IGNORE list
             self.containers = [
                 container for container in self.containers
                 if container['id'].split('|')[0].lower() not in IGNORE_CONTAINERS

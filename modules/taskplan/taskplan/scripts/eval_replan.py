@@ -37,6 +37,10 @@ def evaluate_main(args):
         seed=args.current_seed
     )
 
+    if not pddl['goal']:
+        plt.savefig(f'{args.save_dir}/{args.image_filename}', dpi=100)
+        exit()
+
     if args.logfile_name == 'task_learned_logfile.txt':
         pddl = get_learning_informed_pddl(
             pddl=pddl, partial_map=partial_map,

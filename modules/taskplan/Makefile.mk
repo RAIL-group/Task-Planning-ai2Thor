@@ -9,7 +9,7 @@ help::
 BASENAME ?= taskplan
 NUM_TRAIN_SEEDS ?= 500
 NUM_TEST_SEEDS ?= 200
-NUM_EVAL_SEEDS ?= 100
+NUM_EVAL_SEEDS ?= 200
 
 CORE_ARGS ?= --resolution 0.05
 

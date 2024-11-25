@@ -1,3 +1,6 @@
+import os
+import re
+from collections import Counter
 import time
 import torch
 import random
@@ -13,7 +16,7 @@ from taskplan.utilities.utils import get_container_pose
 
 def get_args():
     args = lambda: None
-    args.current_seed = 7001
+    args.current_seed = 8030
     args.resolution = 0.05
     args.save_dir = '/data/test_logs/'
     args.image_filename = 'tester.png'
@@ -303,3 +306,72 @@ def test_replan():
 
     plt.savefig(f'/data/test_logs/replan_{args.current_seed}.png', dpi=400)
     raise NotImplementedError
+
+
+def test_custom_goal():
+    args = get_args()
+
+    # Load data for a given seed
+    thor_data = taskplan.utilities.ai2thor_helper. \
+        ThorInterface(args=args)
+
+    # # Get the occupancy grid from data
+    # grid = thor_data.occupancy_grid
+    # init_robot_pose = thor_data.get_robot_pose()
+
+    # Get the whole graph from data
+    whole_graph = thor_data.get_graph()
+
+    # Instantiate PDDL for this map
+    pddl = taskplan.pddl.helper.get_pddl_instance(
+        whole_graph=whole_graph,
+        map_data=thor_data,
+        seed=args.current_seed
+    )
+
+    plan, cost = solve_from_pddl(pddl['domain'], pddl['problem'], planner=pddl['planner'])
+    if plan:
+        for p in plan:
+            print(p)
+    raise NotImplementedError
+
+
+def test_get_frequency():
+    # File path to the data
+    word_counter = Counter()
+    folder_path = "/data/test_logs/map_info"
+    for filename in os.listdir(folder_path):
+        # Only process files with the desired extension (e.g., .txt)
+        if filename.endswith(".txt"):
+            file_path = os.path.join(folder_path, filename)
+            print(file_path)
+            # Initialize a counter for word frequencies
+
+            # Process the file
+            with open(file_path, "r") as file:
+                for line in file:
+                    line = line.strip()
+                    if not line:  # Skip empty lines
+                        continue
+
+                    # Extract the key (before the colon) and process it
+                    key = line.split(":")[0].strip()
+                    key_object = key.split("|")[0]  # Take part before '|'
+                    word_counter[key_object] += 1
+
+                    # Extract the list of values (inside brackets)
+                    match = re.search(r"\[.*\]", line)
+                    if match:
+                        values = match.group(0).strip("[]").split(", ")
+                        for value in values:
+                            if value:  # Skip empty strings
+                                value_object = value.split("|")[0].strip("'")  # Take part before '|'
+                                word_counter[value_object] += 1
+
+    # Write the word frequencies to a file
+    output_file = "/data/test_logs/map_info/frequencies.txt"
+    with open(output_file, "w") as file:
+        for word, count in word_counter.most_common():  # Sort by frequency
+            file.write(f"{word}: {count}\n")
+
+    print(f"Word frequencies written to {output_file}")
